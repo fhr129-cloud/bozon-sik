@@ -6,30 +6,26 @@
 <title>보존식 제출</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f3; min-height: 100vh; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans KR', sans-serif; background: #f5f5f3; min-height: 100vh; }
 .app { max-width: 720px; margin: 0 auto; padding: 1rem; }
-
 .header { padding: 1.25rem 0 0.5rem; margin-bottom: 0.5rem; }
 .header h1 { font-size: 20px; font-weight: 600; color: #1a1a1a; }
 .header p { font-size: 13px; color: #888; margin-top: 3px; }
-
-.tab-bar { display: flex; border-bottom: 0.5px solid #e0e0e0; margin-bottom: 1.5rem; background: #f5f5f3; }
-.tab { padding: 10px 20px; font-size: 14px; font-weight: 400; color: #999; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -0.5px; background: none; border-top: none; border-left: none; border-right: none; font-family: inherit; transition: color 0.15s; }
+.tab-bar { display: flex; border-bottom: 1px solid #e0e0e0; margin-bottom: 1.5rem; }
+.tab { padding: 10px 20px; font-size: 14px; font-weight: 400; color: #999; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; border-top: none; border-left: none; border-right: none; font-family: inherit; transition: color 0.15s; }
 .tab.active { color: #1a1a1a; border-bottom: 2px solid #1a1a1a; font-weight: 500; }
 .section { display: none; }
 .section.active { display: block; }
-
 label.field-label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; font-weight: 500; }
 .required { color: #e24b4a; margin-left: 2px; }
 .form-group { margin-bottom: 1.25rem; }
 .two-col { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 10px; margin-bottom: 1.25rem; }
-select, input[type="date"] { width: 100%; height: 40px; padding: 0 12px; font-size: 14px; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff; color: #1a1a1a; font-family: inherit; appearance: none; -webkit-appearance: none; }
+select, input[type="date"] { width: 100%; height: 40px; padding: 0 12px; font-size: 14px; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff; color: #1a1a1a; font-family: inherit; -webkit-appearance: none; appearance: none; }
 select:focus, input:focus { outline: none; border-color: #1a1a1a; }
 select:disabled { opacity: 0.4; cursor: not-allowed; background: #fafafa; }
 .sub-hint { font-size: 12px; color: #aaa; margin-top: 5px; }
 .meals-label { font-size: 13px; color: #666; font-weight: 500; margin-bottom: 10px; }
 .meal-empty-hint { font-size: 13px; color: #bbb; padding: 14px 0; }
-
 .meal-row { border: 1px solid #e8e8e8; border-radius: 10px; margin-bottom: 10px; overflow: hidden; transition: border-color 0.2s; background: #fff; }
 .meal-row.submitted { border-color: #1D9E75; }
 .meal-row-header { display: flex; align-items: center; justify-content: space-between; padding: 13px 14px; gap: 10px; cursor: pointer; background: #fff; user-select: none; }
@@ -40,28 +36,25 @@ select:disabled { opacity: 0.4; cursor: not-allowed; background: #fafafa; }
 .badge-done { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 99px; background: #E1F5EE; color: #0F6E56; white-space: nowrap; flex-shrink: 0; }
 .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #1D9E75; flex-shrink: 0; }
 .meal-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-.btn-edit { padding: 5px 11px; font-size: 12px; font-weight: 500; border: 1px solid #e0e0e0; border-radius: 6px; background: #fafafa; color: #666; cursor: pointer; font-family: inherit; white-space: nowrap; transition: background 0.12s; }
+.btn-edit { padding: 5px 11px; font-size: 12px; font-weight: 500; border: 1px solid #e0e0e0; border-radius: 6px; background: #fafafa; color: #666; cursor: pointer; font-family: inherit; white-space: nowrap; }
 .btn-edit:hover { background: #f0f0f0; }
 .chevron { width: 16px; height: 16px; stroke: #bbb; fill: none; stroke-width: 2; flex-shrink: 0; transition: transform 0.2s; }
 .meal-row.open .chevron { transform: rotate(180deg); }
 .meal-panel { display: none; padding: 0 14px 14px; background: #fff; border-top: 1px solid #f0f0f0; }
 .meal-row.open .meal-panel { display: block; }
 .panel-actions { display: flex; gap: 8px; padding-top: 12px; flex-wrap: wrap; }
-.btn-upload { display: flex; align-items: center; gap: 5px; padding: 7px 12px; font-size: 13px; font-weight: 500; border: 1px solid #e0e0e0; border-radius: 8px; background: #fafafa; color: #666; cursor: pointer; font-family: inherit; transition: background 0.12s; white-space: nowrap; position: relative; overflow: hidden; }
+.btn-upload { display: flex; align-items: center; gap: 5px; padding: 7px 12px; font-size: 13px; font-weight: 500; border: 1px solid #e0e0e0; border-radius: 8px; background: #fafafa; color: #666; cursor: pointer; font-family: inherit; white-space: nowrap; position: relative; overflow: hidden; }
 .btn-upload:hover { background: #f0f0f0; }
 .btn-upload.has-photos { border-color: #1a1a1a; color: #1a1a1a; background: #fff; }
 .btn-upload input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 0; }
 .upload-icon-sm { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.8; flex-shrink: 0; }
-.btn-submit-meal { padding: 7px 16px; font-size: 13px; font-weight: 500; background: #1a1a1a; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; white-space: nowrap; transition: opacity 0.12s; }
+.btn-submit-meal { padding: 7px 16px; font-size: 13px; font-weight: 500; background: #1a1a1a; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; white-space: nowrap; }
 .btn-submit-meal:hover { opacity: 0.8; }
-.btn-submit-meal:disabled { opacity: 0.4; cursor: not-allowed; }
 .btn-cancel { padding: 7px 12px; font-size: 13px; font-weight: 500; border: 1px solid #e0e0e0; border-radius: 8px; background: none; color: #666; cursor: pointer; font-family: inherit; }
 .photo-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; margin-top: 12px; }
 .photo-thumb { aspect-ratio: 1; border-radius: 8px; border: 1px solid #e8e8e8; overflow: hidden; position: relative; background: #f5f5f3; }
 .photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .photo-del { position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; background: rgba(0,0,0,0.55); border: none; cursor: pointer; color: white; font-size: 10px; display: flex; align-items: center; justify-content: center; }
-
-/* 관리자 */
 .admin-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 1.25rem; align-items: flex-end; }
 .admin-controls input[type="date"] { width: auto; flex: 1; min-width: 130px; max-width: 180px; }
 .admin-controls select { width: auto; flex: 1; min-width: 130px; max-width: 200px; }
@@ -85,23 +78,19 @@ td.cell-x { background: #fff; }
 .cell-symbol { font-size: 12px; font-weight: 500; }
 .cell-o .cell-symbol { color: #085041; }
 .cell-x .cell-symbol { color: #ccc; }
-
 .hover-preview { display: none; position: fixed; z-index: 999; background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 8px; pointer-events: none; max-width: 240px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
 .hover-preview.visible { display: block; }
 .preview-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
 .preview-img { width: 68px; height: 68px; border-radius: 4px; object-fit: cover; }
 .preview-label { font-size: 11px; color: #888; margin-bottom: 6px; text-align: center; }
-
-.loading-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.85); z-index: 500; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
+.loading-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.88); z-index: 500; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
 .loading-overlay.show { display: flex; }
 .spinner { width: 28px; height: 28px; border: 2.5px solid #e0e0e0; border-top-color: #1a1a1a; border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .loading-text { font-size: 14px; color: #666; }
-
 .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: #fff; padding: 11px 20px; border-radius: 99px; font-size: 14px; font-weight: 500; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 999; white-space: nowrap; }
 .toast.show { opacity: 1; }
 .toast.error { background: #e24b4a; }
-
 .empty-state { text-align: center; padding: 3rem 1rem; color: #bbb; font-size: 14px; }
 </style>
 </head>
@@ -111,12 +100,10 @@ td.cell-x { background: #fff; }
     <h1>보존식 제출</h1>
     <p>매니저 전용 보존식 사진 제출 시스템</p>
   </div>
-
   <div class="tab-bar">
     <button class="tab active" onclick="switchTab('submit')">보존식 제출</button>
     <button class="tab" onclick="switchTab('admin')">관리자</button>
   </div>
-
   <div class="section active" id="sec-submit">
     <div class="two-col">
       <div>
@@ -138,7 +125,6 @@ td.cell-x { background: #fff; }
       <div id="meal-rows"><div class="meal-empty-hint">사업장을 선택하면 해당 날짜의 끼니가 표시됩니다</div></div>
     </div>
   </div>
-
   <div class="section" id="sec-admin">
     <div class="admin-controls">
       <input type="date" id="admin-from" />
@@ -153,21 +139,34 @@ td.cell-x { background: #fff; }
     </div>
   </div>
 </div>
-
 <div class="hover-preview" id="hover-preview">
   <div class="preview-label" id="preview-label"></div>
   <div class="preview-photos" id="preview-photos"></div>
 </div>
-
 <div class="loading-overlay" id="loading">
   <div class="spinner"></div>
-  <div class="loading-text" id="loading-text">제출 중...</div>
+  <div class="loading-text" id="loading-text">처리 중...</div>
 </div>
-
 <div class="toast" id="toast"></div>
 
-<script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx9H8s5RexsZHNXohL4UTk7_8sqiZXjELd2mL6ALV4Iwz6UyXaLmBjuVa13kA_f3OAv/exec';
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, addDoc, query, where, getDocs, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCvFuJZ6hraxohPnvtAbhvBanXzXf8VE-E",
+  authDomain: "bozon-sik.firebaseapp.com",
+  projectId: "bozon-sik",
+  storageBucket: "bozon-sik.firebasestorage.app",
+  messagingSenderId: "350003291657",
+  appId: "1:350003291657:web:9ef438cc880002c11ffad8"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
 const MANAGERS = [{"name":"강보람","sites":["삼전순약공업"]},{"name":"곽윤정","sites":["동아전장(감곡)"]},{"name":"권은진","sites":["삼정펄프(천안)","KC글라스"]},{"name":"김미선","sites":["한온시스템(아산)"]},{"name":"김미선2","sites":["대덕농협","이구산업","G푸드(지푸드)"]},{"name":"김보라","sites":["디이엔티(오산)"]},{"name":"김신애","sites":["롯데웰푸드(수원)"]},{"name":"김은정","sites":["우진티엠씨","비씨젠(안산)"]},{"name":"김진영","sites":["동인산업"]},{"name":"김하영","sites":["신양","디오토모티브","이피에스 코리아(EPS)"]},{"name":"문민영","sites":["머크"]},{"name":"민숙희","sites":["나래산업"]},{"name":"박수연","sites":["퓨리나","수퍼빈(아이엠펙토리)"]},{"name":"박진경","sites":["퓨어앤텍","한보일렉트"]},{"name":"박진희","sites":["동천"]},{"name":"박혜리","sites":["일렉콤"]},{"name":"방진아","sites":["승우플라텍","엠아이텍","청우코아","파트라","신세대여행사"]},{"name":"방희현","sites":["한석시스템"]},{"name":"서효정","sites":["삼아알미늄"]},{"name":"신영희","sites":["우보테크","피엘에스"]},{"name":"신해인","sites":["오뚜기(논산)","두손","동아전기부품"]},{"name":"양소연","sites":["덕일산업"]},{"name":"양지윤","sites":["지에스아이","한온시스템(둔포)","미소찬"]},{"name":"양한나","sites":["HY(에치와이)"]},{"name":"오차은","sites":["티엔씨","퍼슨"]},{"name":"오희진","sites":["SK가스","진보"]},{"name":"유민지","sites":["메카로"]},{"name":"유정숙","sites":["대한송유관"]},{"name":"윤지연","sites":["그린씨알피","다원체어스"]},{"name":"윤형주","sites":["삼일엘리베이터"]},{"name":"이난희","sites":["신덕산업","한미1공장","한미2공장"]},{"name":"이신혜","sites":["바스노바"]},{"name":"이영주","sites":["오뚜기(평택)"]},{"name":"이윤진","sites":["보성정보통신","성문전자"]},{"name":"이지현","sites":["드림메카텍","유니젠","윤지양행"]},{"name":"이진희","sites":["발렉스","신한전기(엠투엔)","비와이티","대성아이엔지"]},{"name":"이현실","sites":["대코"]},{"name":"임혜민","sites":["삼양화학공업"]},{"name":"장미라","sites":["무봉산수련원"]},{"name":"정연정","sites":["솔레오"]},{"name":"정해린","sites":["세종알로이","한국바이린"]},{"name":"조아라","sites":["진성티이씨 1공장","진성티이씨 2공장"]},{"name":"조지은","sites":["오뚜기(포승)","삼영잉크제조","린데코리아"]},{"name":"조혜진","sites":["동인물산","에스아이","연암","주강로보테크"]},{"name":"조화옥","sites":["쏘나브이씨코리아"]},{"name":"최보연","sites":["한양로보틱스"]},{"name":"최영인","sites":["코오롱인더스트리"]},{"name":"황혜정","sites":["한국가스공사"]}];
 
@@ -183,28 +182,48 @@ document.getElementById('date-input').value = todayStr;
 document.getElementById('admin-from').value = todayStr;
 document.getElementById('admin-to').value = todayStr;
 
-function getDayType(d) { const day=new Date(d).getDay(); return day===6?'토요일':day===0?'일요일':'평일'; }
-function getMeals(site,date) { return (SITE_MEALS[site]&&SITE_MEALS[site][getDayType(date)])||[]; }
-function getState(site,date,meal) {
+function getDayType(d){const day=new Date(d).getDay();return day===6?'토요일':day===0?'일요일':'평일';}
+function getMeals(site,date){return(SITE_MEALS[site]&&SITE_MEALS[site][getDayType(date)])||[];}
+function getState(site,date,meal){
   if(!mealState[site])mealState[site]={};
   if(!mealState[site][date])mealState[site][date]={};
-  if(!mealState[site][date][meal])mealState[site][date][meal]={photos:[],submitted:false};
+  if(!mealState[site][date][meal])mealState[site][date][meal]={photos:[],submitted:false,docId:null};
   return mealState[site][date][meal];
 }
 function cSite(){return document.getElementById('site-select').value;}
 function cDate(){return document.getElementById('date-input').value;}
 function cMgr(){return document.getElementById('manager-select').value;}
 function esc(s){return s.replace(/[^a-zA-Z0-9가-힣]/g,'_');}
+function showLoading(msg){document.getElementById('loading-text').textContent=msg||'처리 중...';document.getElementById('loading').classList.add('show');}
+function hideLoading(){document.getElementById('loading').classList.remove('show');}
+function showToast(msg,isError){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(isError?' error':'');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 
 // 초기화
-(function init() {
-  const mSel=document.getElementById('manager-select'), aMgr=document.getElementById('admin-manager');
+(function init(){
+  const mSel=document.getElementById('manager-select'),aMgr=document.getElementById('admin-manager');
   MANAGERS.forEach(m=>{mSel.appendChild(new Option(m.name,m.name));aMgr.appendChild(new Option(m.name,m.name));});
 })();
 
-function onManagerChange() {
-  const name=cMgr(), siteSel=document.getElementById('site-select'), hint=document.getElementById('site-hint');
-  openRows.clear(); editingMeals.clear(); siteSel.innerHTML='';
+// 제출 상태 로드 (새로고침해도 유지)
+async function loadSubmitState(site, date, manager) {
+  try {
+    const q = query(collection(db,'submissions'),
+      where('site','==',site), where('date','==',date), where('manager','==',manager));
+    const snap = await getDocs(q);
+    snap.forEach(d => {
+      const data = d.data();
+      const st = getState(site, date, data.meal);
+      st.submitted = true;
+      st.docId = d.id;
+      st.photoURLs = data.photoURLs || [];
+      st.photos = data.photoURLs.map(url=>({preview:url, url}));
+    });
+  } catch(e){ console.error(e); }
+}
+
+function onManagerChange(){
+  const name=cMgr(),siteSel=document.getElementById('site-select'),hint=document.getElementById('site-hint');
+  openRows.clear();editingMeals.clear();siteSel.innerHTML='';
   if(!name){siteSel.appendChild(new Option('먼저 매니저를 선택하세요',''));siteSel.disabled=true;hint.textContent='';renderMealRows([]);return;}
   const mgr=MANAGERS.find(m=>m.name===name);
   siteSel.disabled=false;
@@ -213,19 +232,35 @@ function onManagerChange() {
   if(mgr.sites.length===1){siteSel.value=mgr.sites[0];hint.textContent='담당 사업장 1곳';onSiteChange();}
   else{hint.textContent=`담당 사업장 ${mgr.sites.length}곳`;renderMealRows([]);}
 }
-function onSiteChange(){openRows.clear();editingMeals.clear();const s=cSite();renderMealRows(s?getMeals(s,cDate()):[]);}
-function onDateChange(){openRows.clear();editingMeals.clear();const s=cSite();if(s)renderMealRows(getMeals(s,cDate()));}
+
+async function onSiteChange(){
+  openRows.clear();editingMeals.clear();
+  const site=cSite(),date=cDate(),mgr=cMgr();
+  if(!site){renderMealRows([]);return;}
+  if(mgr){showLoading('불러오는 중...');await loadSubmitState(site,date,mgr);hideLoading();}
+  renderMealRows(getMeals(site,date));
+}
+
+async function onDateChange(){
+  openRows.clear();editingMeals.clear();
+  const site=cSite(),date=cDate(),mgr=cMgr();
+  if(!site)return;
+  if(mgr){showLoading('불러오는 중...');await loadSubmitState(site,date,mgr);hideLoading();}
+  renderMealRows(getMeals(site,date));
+}
 
 function toggleRow(meal){
   const id=esc(meal),row=document.getElementById('row-'+id);if(!row)return;
   if(openRows.has(meal)){openRows.delete(meal);row.classList.remove('open');}
   else{openRows.add(meal);row.classList.add('open');}
 }
+
 function renderMealRows(meals){
   const c=document.getElementById('meal-rows');
   if(!meals.length){c.innerHTML='<div class="meal-empty-hint">사업장을 선택하면 해당 날짜의 끼니가 표시됩니다</div>';return;}
   c.innerHTML=meals.map(m=>buildMealRow(m)).join('');
 }
+
 function buildMealRow(meal){
   const site=cSite(),date=cDate(),st=getState(site,date,meal),id=esc(meal);
   const isEditing=editingMeals.has(meal),isOpen=openRows.has(meal);
@@ -240,6 +275,7 @@ function buildMealRow(meal){
   const photos=st.photos.length?`<div class="photo-grid">${st.photos.map((p,i)=>`<div class="photo-thumb"><img src="${p.preview}"/>${(!st.submitted||isEditing)?`<button class="photo-del" onclick="removePhoto('${meal}',${i})">✕</button>`:''}</div>`).join('')}</div>`:'';
   return `<div class="meal-row${st.submitted&&!isEditing?' submitted':''}${isOpen?' open':''}" id="row-${id}"><div class="meal-row-header" onclick="toggleRow('${meal}')"><div class="meal-left"><span class="meal-name">${meal}</span>${pill}</div><div class="meal-right">${right}<svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div></div><div class="meal-panel">${panel}${photos}</div></div>`;
 }
+
 function refreshRow(meal){const id=esc(meal),el=document.getElementById('row-'+id);if(!el)return;const t=document.createElement('div');t.innerHTML=buildMealRow(meal);el.replaceWith(t.firstElementChild);}
 
 function handleFiles(input,meal){
@@ -247,15 +283,9 @@ function handleFiles(input,meal){
   const files=Array.from(input.files).slice(0,10-st.photos.length);
   let loaded=0;
   files.forEach(f=>{
-    const reader=new FileReader();
-    reader.onload=e=>{
-      // base64 (data:image/jpeg;base64,XXX) → XXX만 추출
-      const b64=e.target.result.split(',')[1];
-      st.photos.push({preview:e.target.result, data:b64, name:f.name});
-      loaded++;
-      if(loaded===files.length)refreshRow(meal);
-    };
-    reader.readAsDataURL(f);
+    const r=new FileReader();
+    r.onload=e=>{st.photos.push({preview:e.target.result,file:f});loaded++;if(loaded===files.length)refreshRow(meal);};
+    r.readAsDataURL(f);
   });
   input.value='';
 }
@@ -267,28 +297,44 @@ async function submitMeal(meal){
   const st=getState(site,date,meal);
   if(!st.photos.length){showToast('사진을 먼저 첨부해주세요',true);return;}
 
-  showLoading(`${meal} 제출 중...`);
+  showLoading(`${meal} 제출 중... (${st.photos.length}장)`);
   try {
-    const res = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify({
-        type: 'submit',
-        manager, site, date, meal,
-        photos: st.photos.map(p=>({data:p.data, name:p.name}))
-      })
-    });
-    const json = await res.json();
-    if(json.success){
-      st.submitted=true; editingMeals.delete(meal); openRows.delete(meal);
-      refreshRow(meal); showToast(`${meal} 제출 완료!`);
-    } else {
-      showToast('제출 실패: '+json.error, true);
+    // 1. Storage에 사진 업로드
+    const photoURLs = [];
+    for(let i=0; i<st.photos.length; i++){
+      const p = st.photos[i];
+      if(p.url){ photoURLs.push(p.url); continue; } // 이미 업로드된 사진
+      const path = `submissions/${date}/${site}/${meal}/${Date.now()}_${i}.jpg`;
+      const storageRef = ref(storage, path);
+      const blob = await fetch(p.preview).then(r=>r.blob());
+      await uploadBytes(storageRef, blob);
+      const url = await getDownloadURL(storageRef);
+      photoURLs.push(url);
     }
+
+    // 2. Firestore에 기록
+    const docId = `${manager}_${site}_${date}_${meal}`.replace(/[^a-zA-Z0-9가-힣_-]/g,'_');
+    await setDoc(doc(db,'submissions',docId),{
+      manager, site, date, meal,
+      photoURLs,
+      submittedAt: new Date().toISOString()
+    });
+
+    st.submitted = true;
+    st.docId = docId;
+    st.photoURLs = photoURLs;
+    st.photos = photoURLs.map(url=>({preview:url, url}));
+    editingMeals.delete(meal);
+    openRows.delete(meal);
+    refreshRow(meal);
+    showToast(`${meal} 제출 완료!`);
   } catch(e){
-    showToast('네트워크 오류가 발생했어요', true);
+    console.error(e);
+    showToast('제출 실패: '+e.message, true);
   }
   hideLoading();
 }
+
 function startEdit(meal){editingMeals.add(meal);openRows.add(meal);refreshRow(meal);}
 function cancelEdit(meal){editingMeals.delete(meal);openRows.delete(meal);refreshRow(meal);}
 
@@ -298,23 +344,25 @@ function switchTab(tab){
   document.getElementById('sec-admin').classList.toggle('active',tab==='admin');
 }
 
-function resetAdmin(){document.getElementById('admin-from').value=todayStr;document.getElementById('admin-to').value=todayStr;document.getElementById('admin-manager').value='';document.getElementById('grid-wrap').innerHTML='<div class="empty-state">날짜를 선택하고 조회해주세요</div>';}
+function resetAdmin(){
+  document.getElementById('admin-from').value=todayStr;
+  document.getElementById('admin-to').value=todayStr;
+  document.getElementById('admin-manager').value='';
+  document.getElementById('grid-wrap').innerHTML='<div class="empty-state">날짜를 선택하고 조회해주세요</div>';
+}
 
 async function loadAdminData(){
   const from=document.getElementById('admin-from').value,to=document.getElementById('admin-to').value;
   if(!from||!to){showToast('날짜를 선택해주세요',true);return;}
   showLoading('데이터 불러오는 중...');
   try {
-    const res=await fetch(SCRIPT_URL+'?from='+from+'&to='+to);
-    const json=await res.json();
-    if(json.success){
-      adminRecords=json.data||[];
-      renderAdminGrid();
-    } else {
-      showToast('데이터 조회 실패',true);
-    }
+    const q=query(collection(db,'submissions'),where('date','>=',from),where('date','<=',to));
+    const snap=await getDocs(q);
+    adminRecords=[];
+    snap.forEach(d=>adminRecords.push(d.data()));
+    renderAdminGrid();
   } catch(e){
-    showToast('네트워크 오류가 발생했어요',true);
+    showToast('조회 실패: '+e.message,true);
   }
   hideLoading();
 }
@@ -329,12 +377,10 @@ function renderAdminGrid(){
   let sites=ALL_SITES;
   if(mf){const mg=MANAGERS.find(m=>m.name===mf);sites=mg?mg.sites:[];}
 
-  // adminRecords → 빠른 조회용 맵
   const recMap={};
   adminRecords.forEach(r=>{
-    const key=`${r['사업장']}|${r['날짜']}|${r['끼니']}`;
-    if(!recMap[key])recMap[key]=[];
-    if(r['사진링크'])r['사진링크'].split('\n').forEach(url=>{if(url.trim())recMap[key].push(url.trim());});
+    const key=`${r.site}|${r.date}|${r.meal}`;
+    recMap[key]=r.photoURLs||[];
   });
 
   let html='<table class="admin-grid"><thead><tr><th class="th-site" rowspan="2">사업장</th>';
@@ -349,10 +395,9 @@ function renderAdminGrid(){
       const meals=getMeals(site,col.date);
       if(!meals.includes(col.meal)){html+=`<td class="cell cell-gray${sep}"></td>`;return;}
       const key=`${site}|${col.date}|${col.meal}`;
-      const links=recMap[key];
-      if(links&&links.length){
-        const safeKey=key.replace(/['"]/g,'');
-        html+=`<td class="cell cell-o${sep}" onmouseenter="showPreview(event,'${safeKey}')" onmouseleave="hidePreview()"><span class="cell-symbol">O</span></td>`;
+      const urls=recMap[key];
+      if(urls&&urls.length){
+        html+=`<td class="cell cell-o${sep}" data-key="${key}" onmouseenter="showPreview(event,'${key}')" onmouseleave="hidePreview()"><span class="cell-symbol">O</span></td>`;
       } else {
         html+=`<td class="cell cell-x${sep}"><span class="cell-symbol">X</span></td>`;
       }
@@ -366,25 +411,32 @@ function renderAdminGrid(){
 const prevEl=document.getElementById('hover-preview'),prevPhotos=document.getElementById('preview-photos'),prevLabel=document.getElementById('preview-label');
 function showPreview(e,key){
   const recMap={};
-  adminRecords.forEach(r=>{
-    const k=`${r['사업장']}|${r['날짜']}|${r['끼니']}`;
-    if(!recMap[k])recMap[k]=[];
-    if(r['사진링크'])r['사진링크'].split('\n').forEach(url=>{if(url.trim())recMap[k].push(url.trim());});
-  });
-  const links=recMap[key]||[];
-  if(!links.length)return;
+  adminRecords.forEach(r=>{recMap[`${r.site}|${r.date}|${r.meal}`]=r.photoURLs||[];});
+  const urls=recMap[key]||[];if(!urls.length)return;
   const parts=key.split('|');
   prevLabel.textContent=`${parts[0]} · ${parts[2]}`;
-  prevPhotos.innerHTML=links.slice(0,6).map(url=>`<img class="preview-img" src="${url}" onerror="this.style.display='none'" />`).join('');
+  prevPhotos.innerHTML=urls.slice(0,6).map(url=>`<img class="preview-img" src="${url}" onerror="this.style.display='none'"/>`).join('');
   prevEl.classList.add('visible');movePreview(e);
 }
 function movePreview(e){const pw=256,ph=160;let x=e.clientX+12,y=e.clientY+12;if(x+pw>window.innerWidth)x=e.clientX-pw-8;if(y+ph>window.innerHeight)y=e.clientY-ph-8;prevEl.style.left=x+'px';prevEl.style.top=y+'px';}
 document.addEventListener('mousemove',e=>{if(prevEl.classList.contains('visible'))movePreview(e);});
 function hidePreview(){prevEl.classList.remove('visible');}
 
-function showLoading(msg){document.getElementById('loading-text').textContent=msg||'처리 중...';document.getElementById('loading').classList.add('show');}
-function hideLoading(){document.getElementById('loading').classList.remove('show');}
-function showToast(msg,isError){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(isError?' error':'');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+// 전역 함수로 등록
+window.onManagerChange=onManagerChange;
+window.onSiteChange=onSiteChange;
+window.onDateChange=onDateChange;
+window.toggleRow=toggleRow;
+window.handleFiles=handleFiles;
+window.removePhoto=removePhoto;
+window.submitMeal=submitMeal;
+window.startEdit=startEdit;
+window.cancelEdit=cancelEdit;
+window.switchTab=switchTab;
+window.loadAdminData=loadAdminData;
+window.resetAdmin=resetAdmin;
+window.showPreview=showPreview;
+window.hidePreview=hidePreview;
 </script>
 </body>
 </html>
