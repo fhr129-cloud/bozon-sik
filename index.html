@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>온정 F&B 보존식 제출</title>
+<style>
+:root{--bg:#f5f5f3;--bg2:#fff;--bg3:#fafafa;--border:#e0e0e0;--border2:#e8e8e8;--text1:#1a1a1a;--text2:#666;--text3:#999;--text4:#bbb;--green:#1D9E75;--green-light:#E1F5EE;--green-dark:#0F6E56;--red:#e24b4a;--shadow:rgba(0,0,0,0.08);}
+.dark #logo-img{filter:invert(1);}
+.dark{--bg:#111;--bg2:#1e1e1e;--bg3:#2a2a2a;--border:#333;--border2:#2a2a2a;--text1:#f0f0f0;--text2:#aaa;--text3:#666;--text4:#444;--shadow:rgba(0,0,0,0.4);}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans KR',sans-serif;background:var(--bg);min-height:100vh;color:var(--text1);}
+.app{max-width:720px;margin:0 auto;padding:1rem;padding-bottom:3rem;}
+.header{padding:1.25rem 0 0.5rem;margin-bottom:0.5rem;display:flex;justify-content:space-between;align-items:center;}
+.header-left h1{font-size:20px;font-weight:600;color:var(--text1);}
+.header-left p{font-size:13px;color:var(--text2);margin-top:3px;}
+.btn-dark{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--bg2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
+.tab-bar{display:flex;border-bottom:1px solid var(--border);margin-bottom:1.5rem;overflow-x:auto;scrollbar-width:none;}
+.tab-bar::-webkit-scrollbar{display:none;}
+.tab{padding:10px 14px;font-size:14px;font-weight:400;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit;white-space:nowrap;min-height:44px;}
+.tab.active{color:var(--text1);border-bottom:2px solid var(--text1);font-weight:500;}
+.section{display:none;}.section.active{display:block;}
+label.field-label{display:block;font-size:13px;color:var(--text2);margin-bottom:6px;font-weight:500;}
+.required{color:var(--red);margin-left:2px;}
+.form-group{margin-bottom:1.25rem;}
+.two-col{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-bottom:1.25rem;}
+select,input[type="date"],input[type="month"],input[type="text"]{width:100%;height:44px;padding:0 12px;font-size:16px;border:1px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text1);font-family:inherit;-webkit-appearance:none;appearance:none;}
+select:focus,input:focus{outline:none;border-color:var(--text1);}
+select:disabled{opacity:0.4;cursor:not-allowed;background:var(--bg3);}
+.sub-hint{font-size:12px;color:var(--text4);margin-top:5px;}
+.meals-label{font-size:13px;color:var(--text2);font-weight:500;margin-bottom:10px;}
+.meal-empty-hint{font-size:13px;color:var(--text4);padding:14px 0;}
+
+/* 끼니 카드 */
+.meal-row{border:1px solid var(--border2);border-radius:12px;margin-bottom:10px;overflow:hidden;background:var(--bg2);transition:border-color 0.2s;}
+.meal-row.has-photo{border-color:#aaa;}
+.meal-row.not-provided{border-color:var(--border);opacity:0.6;}
+.meal-row.submitted{border-color:var(--green);}
+.meal-row-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;gap:10px;cursor:pointer;background:var(--bg2);user-select:none;min-height:60px;}
+.meal-row-header:active{background:var(--bg3);}
+.meal-left{display:flex;align-items:center;gap:12px;min-width:0;flex:1;}
+.meal-name{font-size:15px;font-weight:500;color:var(--text1);white-space:nowrap;}
+.meal-thumb{width:40px;height:40px;border-radius:8px;object-fit:cover;border:1px solid var(--border2);flex-shrink:0;}
+.meal-thumb-placeholder{width:40px;height:40px;border-radius:8px;border:1.5px dashed var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--text4);}
+.badge-done{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;padding:4px 10px;border-radius:99px;background:var(--green-light);color:var(--green-dark);white-space:nowrap;flex-shrink:0;}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.meal-right{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.btn-edit{padding:6px 12px;font-size:12px;font-weight:500;border:1px solid var(--border);border-radius:8px;background:var(--bg3);color:var(--text2);cursor:pointer;font-family:inherit;white-space:nowrap;}
+.chevron{width:16px;height:16px;stroke:var(--text4);fill:none;stroke-width:2;flex-shrink:0;transition:transform 0.2s;}
+.meal-row.open .chevron{transform:rotate(180deg);}
+.meal-panel{display:none;padding:0 16px 16px;background:var(--bg2);border-top:1px solid var(--border2);}
+.meal-row.open .meal-panel{display:block;}
+.btn-upload{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;font-size:14px;font-weight:500;border:1.5px dashed var(--border);border-radius:10px;background:var(--bg3);color:var(--text2);cursor:pointer;font-family:inherit;position:relative;overflow:hidden;min-height:54px;margin-top:12px;}
+.btn-upload.has-photo{border-style:solid;border-color:var(--text1);color:var(--text1);background:var(--bg2);}
+.btn-upload input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0;}
+.upload-icon-sm{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;flex-shrink:0;}
+.photo-preview-large{margin-top:10px;position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--border2);}
+.photo-preview-large img{width:100%;max-height:260px;object-fit:cover;display:block;}
+.photo-del-large{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,0.6);border:none;cursor:pointer;color:white;font-size:14px;display:flex;align-items:center;justify-content:center;}
+.submit-all-wrap{position:sticky;bottom:1rem;margin-top:1rem;}
+.btn-submit-all{width:100%;padding:16px;font-size:16px;font-weight:600;background:var(--text1);color:var(--bg2);border:none;border-radius:14px;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px var(--shadow);}
+.btn-submit-all:disabled{opacity:0.35;cursor:not-allowed;}
+.btn-submit-all:not(:disabled):active{transform:scale(0.98);}
+.submit-status{font-size:13px;color:var(--text3);text-align:center;margin-top:8px;}
+
+/* 공통 버튼 */
+.btn-primary{padding:0 16px;height:44px;font-size:14px;font-weight:500;background:var(--text1);color:var(--bg2);border:none;border-radius:10px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.btn-secondary{padding:0 14px;height:44px;font-size:14px;font-weight:500;background:var(--bg2);border:1px solid var(--border);border-radius:10px;cursor:pointer;white-space:nowrap;font-family:inherit;color:var(--text1);}
+.btn-secondary:hover{background:var(--bg3);}
+.btn-green{padding:0 14px;height:44px;font-size:14px;font-weight:500;background:var(--green);border:none;border-radius:10px;cursor:pointer;white-space:nowrap;font-family:inherit;color:white;}
+.btn-green:disabled{opacity:0.4;cursor:not-allowed;}
+
+/* 관리자 현황 */
+.admin-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.25rem;align-items:flex-end;}
+.admin-controls input[type="date"]{width:auto;flex:1;min-width:120px;max-width:170px;}
+.admin-controls select{width:auto;flex:1;min-width:120px;max-width:180px;}
+.auto-refresh-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:13px;color:var(--text2);}
+.refresh-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.grid-wrap{overflow-x:auto;border:1px solid var(--border2);border-radius:12px;background:var(--bg2);}
+table.admin-grid{border-collapse:collapse;font-size:12px;min-width:100%;}
+.admin-grid th,.admin-grid td{border-right:0.5px solid var(--border2);border-bottom:0.5px solid var(--border2);text-align:center;white-space:nowrap;}
+.admin-grid th:last-child,.admin-grid td:last-child{border-right:none;}
+.admin-grid tr:last-child td{border-bottom:none;}
+.admin-grid .date-sep{border-left:2px solid var(--border);}
+th.th-date{padding:6px 8px;font-size:11px;font-weight:500;color:var(--text2);background:var(--bg3);}
+th.th-meal{padding:5px 6px;font-size:10px;color:var(--text3);background:var(--bg3);min-width:44px;}
+th.th-site{padding:8px 12px;font-size:12px;font-weight:500;color:var(--text1);background:var(--bg3);text-align:left;position:sticky;left:0;z-index:2;min-width:110px;}
+td.td-site{padding:0 12px;height:32px;font-size:12px;color:var(--text1);text-align:left;background:var(--bg2);position:sticky;left:0;z-index:1;border-right:1px solid var(--border2);}
+td.cell{height:32px;min-width:44px;}
+td.cell-gray{background:var(--bg3);}
+td.cell-o{background:#5DCAA5;cursor:pointer;}
+td.cell-o:hover{background:var(--green);}
+td.cell-x{background:var(--bg2);}
+.cell-symbol{font-size:12px;font-weight:600;}
+.cell-o .cell-symbol{color:#085041;}
+.cell-x .cell-symbol{color:var(--text4);}
+.hover-preview{display:none;position:fixed;z-index:999;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px;pointer-events:none;max-width:220px;box-shadow:0 8px 24px var(--shadow);}
+.hover-preview.visible{display:block;}
+.preview-photos{display:grid;grid-template-columns:1fr;}
+.preview-img{width:180px;height:180px;border-radius:8px;object-fit:cover;}
+.preview-label{font-size:11px;color:var(--text2);margin-bottom:6px;text-align:center;font-weight:500;}
+
+
+/* 설정 */
+.settings-title{font-size:15px;font-weight:600;color:var(--text1);margin-bottom:4px;}
+.settings-sub{font-size:13px;color:var(--text2);margin-bottom:1.25rem;}
+.site-card{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;margin-bottom:10px;overflow:hidden;}
+.site-card-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;min-height:60px;}
+.site-card-header:hover{background:var(--bg3);}
+.site-card-header:active{background:var(--bg3);}
+.site-card-name{font-size:14px;font-weight:500;color:var(--text1);}
+.site-card-info{font-size:12px;color:var(--text2);margin-top:3px;}
+.site-card.open .chevron{transform:rotate(180deg);}
+.site-card-panel{display:none;padding:16px;border-top:1px solid var(--border2);}
+.site-card.open .site-card-panel{display:block;}
+.panel-section-label{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:8px;margin-top:14px;}
+.panel-section-label:first-child{margin-top:0;}
+.day-row{margin-bottom:12px;}
+.day-name{font-size:13px;color:var(--text2);margin-bottom:6px;font-weight:500;}
+.meal-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.meal-chip{padding:7px 14px;font-size:13px;border:1px solid var(--border);border-radius:8px;cursor:pointer;background:var(--bg3);color:var(--text2);user-select:none;}
+.meal-chip.on{border-color:var(--green);background:var(--green-light);color:var(--green-dark);font-weight:500;}
+.btn-save{width:100%;padding:12px;font-size:14px;font-weight:500;background:var(--text1);color:var(--bg2);border:none;border-radius:10px;cursor:pointer;font-family:inherit;margin-top:16px;}
+.btn-save:hover{opacity:0.85;}
+
+/* 로딩/토스트 */
+.loading-overlay{display:none;position:fixed;inset:0;background:rgba(255,255,255,0.88);z-index:500;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+.dark .loading-overlay{background:rgba(0,0,0,0.75);}
+.loading-overlay.show{display:flex;}
+.spinner{width:28px;height:28px;border:2.5px solid var(--border);border-top-color:var(--text1);border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-text{font-size:14px;color:var(--text2);}
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:var(--text1);color:var(--bg2);padding:12px 22px;border-radius:99px;font-size:14px;font-weight:500;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:999;white-space:nowrap;max-width:90vw;text-align:center;}
+.toast.show{opacity:1;}.toast.error{background:var(--red);}
+
+/* 사진 모달 */
+.photo-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:1000;align-items:center;justify-content:center;cursor:zoom-out;}
+.photo-modal.open{display:flex;}
+.photo-modal img{max-width:95vw;max-height:95vh;object-fit:contain;border-radius:8px;}
+.photo-modal-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.2);border:none;cursor:pointer;color:white;font-size:20px;display:flex;align-items:center;justify-content:center;}
+.photo-modal-label{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.8);font-size:13px;white-space:nowrap;}
+
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--text4);font-size:14px;}
+@media(max-width:480px){.two-col{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-left">
+      <img src="logo.jpg" id="logo-img" style="height:44px;object-fit:contain;display:block;" alt="온정 F&B" />
+    </div>
+    <button class="btn-dark" onclick="toggleDark()" id="dark-btn">🌙</button>
+  </div>
+  <div class="tab-bar">
+    <button class="tab active" onclick="switchTab('submit')">보존식 제출</button>
+    <button class="tab" onclick="switchTab('admin')">제출 현황</button>
+    <button class="tab" onclick="switchTab('settings')">설정</button>
+  </div>
+
+  <!-- 제출 탭 -->
+  <div class="section active" id="sec-submit">
+    <div class="two-col">
+      <div><label class="field-label">매니저 이름 <span class="required">*</span></label><select id="manager-select" onchange="onManagerChange()"><option value="">매니저를 선택하세요</option></select></div>
+      <div><label class="field-label">날짜 <span class="required">*</span></label><input type="date" id="date-input" onchange="onDateChange()" /></div>
+    </div>
+    <div class="form-group">
+      <label class="field-label">사업장 <span class="required">*</span></label>
+      <select id="site-select" disabled onchange="onSiteChange()"><option value="">먼저 매니저를 선택하세요</option></select>
+      <div class="sub-hint" id="site-hint"></div>
+    </div>
+    <div class="form-group">
+      <div class="meals-label">끼니별 사진 첨부 <span class="required">*</span></div>
+      <div id="meal-rows"><div class="meal-empty-hint">사업장을 선택하면 끼니가 표시됩니다</div></div>
+    </div>
+    <div class="submit-all-wrap" id="submit-all-wrap" style="display:none;">
+      <button class="btn-submit-all" id="btn-submit-all" onclick="submitAll()"><span id="submit-all-label">모두 제출</span></button>
+      <div class="submit-status" id="submit-status"></div>
+    </div>
+  </div>
+
+  <!-- 관리자 현황 탭 -->
+  <div class="section" id="sec-admin">
+    <div class="auto-refresh-bar"><div class="refresh-dot"></div><span id="refresh-status">자동 새로고침 대기 중</span></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <button onclick="setQuickDate('yesterday')" id="btn-yesterday" style="padding:0 18px;height:40px;font-size:14px;font-weight:500;border:0.5px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text1);cursor:pointer;font-family:inherit;">어제</button>
+      <button onclick="setQuickDate('today')" id="btn-today" style="padding:0 18px;height:40px;font-size:14px;font-weight:500;border:0.5px solid var(--border);border-radius:10px;background:var(--text1);color:var(--bg2);cursor:pointer;font-family:inherit;">오늘</button>
+    </div>
+    <div class="admin-controls">
+      <input type="date" id="admin-from" />
+      <span style="font-size:13px;color:var(--text4);line-height:44px;">~</span>
+      <input type="date" id="admin-to" />
+      <select id="admin-manager" onchange="onAdminManagerChange()"><option value="">전체 매니저</option></select>
+      <button class="btn-secondary" onclick="loadAdminData()">조회</button>
+      <button class="btn-secondary" onclick="resetAdmin()">초기화</button>
+      <button class="btn-green" id="btn-excel" onclick="downloadExcel()" disabled>📊 엑셀</button>
+    </div>
+    <div id="missing-summary" style="display:none;margin-bottom:1rem;"></div>
+    <div class="grid-wrap" id="grid-wrap"><div class="empty-state">날짜를 선택하고 조회해주세요</div></div>
+  </div>
+
+  <!-- 설정 탭 -->
+  <!-- 설정 탭 -->
+  <div class="section" id="sec-settings">
+    <div id="settings-lock">
+      <div style="max-width:320px;margin:2rem auto;">
+        <div style="font-size:16px;font-weight:600;color:var(--text1);margin-bottom:6px;">관리자 확인</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:1.25rem;">설정을 변경하려면 비밀번호를 입력해주세요</div>
+        <div style="display:flex;gap:8px;">
+          <input type="password" id="settings-pw-input" placeholder="비밀번호" style="flex:1;" onkeydown="if(event.key==='Enter')checkSettingsPw()" />
+          <button class="btn-primary" onclick="checkSettingsPw()">확인</button>
+        </div>
+        <div id="settings-pw-error" style="font-size:12px;color:var(--red);margin-top:8px;min-height:16px;"></div>
+      </div>
+    </div>
+    <div id="settings-content" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <div class="settings-title">사업장 설정</div>
+        <button onclick="lockSettings()" style="font-size:12px;color:var(--text3);background:none;border:none;cursor:pointer;">잠금</button>
+      </div>
+      <div class="settings-sub">담당 매니저와 요일별 끼니를 변경할 수 있어요. 저장하면 앱 전체에 즉시 반영돼요.</div>
+      <div id="site-settings-list"><div class="empty-state">불러오는 중...</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="hover-preview" id="hover-preview"><div class="preview-label" id="preview-label"></div><div class="preview-photos" id="preview-photos"></div></div>
+<div class="loading-overlay" id="loading"><div class="spinner"></div><div class="loading-text" id="loading-text">처리 중...</div></div>
+<div class="photo-modal" id="photo-modal" onclick="closePhotoModal()">
+  <button class="photo-modal-close" onclick="closePhotoModal()">✕</button>
+  <img id="photo-modal-img" src="" />
+  <div class="photo-modal-label" id="photo-modal-label"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, query, where, getDocs, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
+
+const firebaseConfig={apiKey:"AIzaSyCvFuJZ6hraxohPnvtAbhvBanXzXf8VE-E",authDomain:"bozon-sik.firebaseapp.com",projectId:"bozon-sik",storageBucket:"bozon-sik.firebasestorage.app",messagingSenderId:"350003291657",appId:"1:350003291657:web:9ef438cc880002c11ffad8"};
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+const storage=getStorage(app);
+
+const ALL_MEAL_OPTIONS=['조식','중식','석식','야식'];
+const ALL_DAYS=['평일','토요일','일요일'];
+
+// 기본 데이터 (Firebase에 설정 없을 때 폴백)
+let MANAGERS=[{"name":"강보람","sites":["삼전순약공업"]},{"name":"곽윤정","sites":["동아전장(감곡)"]},{"name":"권은진","sites":["삼정펄프(천안)","KC글라스"]},{"name":"김미선","sites":["한온시스템(아산)"]},{"name":"김미선2","sites":["대덕농협","이구산업","G푸드(지푸드)"]},{"name":"김보라","sites":["디이엔티(오산)"]},{"name":"김신애","sites":["롯데웰푸드(수원)"]},{"name":"김은정","sites":["우진티엠씨","비씨젠(안산)"]},{"name":"김진영","sites":["동인산업"]},{"name":"김하영","sites":["신양","디오토모티브","이피에스 코리아(EPS)"]},{"name":"문민영","sites":["머크"]},{"name":"민숙희","sites":["나래산업"]},{"name":"박수연","sites":["퓨리나","수퍼빈(아이엠펙토리)"]},{"name":"박진경","sites":["퓨어앤텍","한보일렉트"]},{"name":"박진희","sites":["동천"]},{"name":"박혜리","sites":["일렉콤"]},{"name":"방진아","sites":["승우플라텍","엠아이텍","청우코아","파트라","신세대여행사"]},{"name":"방희현","sites":["한석시스템"]},{"name":"서효정","sites":["삼아알미늄"]},{"name":"신영희","sites":["우보테크","피엘에스"]},{"name":"신해인","sites":["오뚜기(논산)","두손","동아전기부품"]},{"name":"양소연","sites":["덕일산업"]},{"name":"양지윤","sites":["지에스아이","한온시스템(둔포)","미소찬"]},{"name":"양한나","sites":["HY(에치와이)"]},{"name":"오차은","sites":["티엔씨","퍼슨"]},{"name":"오희진","sites":["SK가스","진보"]},{"name":"유민지","sites":["메카로"]},{"name":"유정숙","sites":["대한송유관"]},{"name":"윤지연","sites":["그린씨알피","다원체어스"]},{"name":"윤형주","sites":["삼일엘리베이터"]},{"name":"이난희","sites":["신덕산업","한미1공장","한미2공장"]},{"name":"이신혜","sites":["바스노바"]},{"name":"이영주","sites":["오뚜기(평택)"]},{"name":"이윤진","sites":["보성정보통신","성문전자"]},{"name":"이지현","sites":["드림메카텍","유니젠","윤지양행"]},{"name":"이진희","sites":["발렉스","신한전기(엠투엔)","비와이티","대성아이엔지"]},{"name":"이현실","sites":["대코"]},{"name":"임혜민","sites":["삼양화학공업"]},{"name":"장미라","sites":["무봉산수련원"]},{"name":"정연정","sites":["솔레오"]},{"name":"정해린","sites":["세종알로이","한국바이린"]},{"name":"조아라","sites":["진성티이씨 1공장","진성티이씨 2공장"]},{"name":"조지은","sites":["오뚜기(포승)","삼영잉크제조","린데코리아"]},{"name":"조혜진","sites":["동인물산","에스아이","연암","주강로보테크"]},{"name":"조화옥","sites":["쏘나브이씨코리아"]},{"name":"최보연","sites":["한양로보틱스"]},{"name":"최영인","sites":["코오롱인더스트리"]},{"name":"황혜정","sites":["한국가스공사"]}];
+let SITE_MEALS={"그린씨알피":{"평일":["중식","석식","야식"],"토요일":["중식","석식","야식"],"일요일":["중식","석식","야식"]},"대덕농협":{"평일":["중식"],"토요일":["중식"],"일요일":["중식"]},"덕일산업":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"동인물산":{"평일":["조식","중식","석식","야식"],"토요일":[],"일요일":[]},"동천":{"평일":["조식","중식","석식"],"토요일":[],"일요일":[]},"드림메카텍":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"롯데웰푸드(수원)":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"메카로":{"평일":["조식","중식","석식"],"토요일":[],"일요일":[]},"발렉스":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"보성정보통신":{"평일":["중식","석식","야식"],"토요일":["중식","석식","야식"],"일요일":["중식","석식","야식"]},"삼양화학공업":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"삼일엘리베이터":{"평일":["조식","중식","석식"],"토요일":[],"일요일":[]},"삼전순약공업":{"평일":["중식"],"토요일":[],"일요일":[]},"삼정펄프(천안)":{"평일":["중식","석식"],"토요일":["중식","석식"],"일요일":["중식","석식"]},"성문전자":{"평일":["중식","석식","야식"],"토요일":[],"일요일":[]},"세종알로이":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"솔레오":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"승우플라텍":{"평일":["조식","중식","석식","야식"],"토요일":[],"일요일":[]},"신덕산업":{"평일":["조식","중식","석식"],"토요일":[],"일요일":[]},"신양":{"평일":["중식","석식","야식"],"토요일":[],"일요일":[]},"신한전기(엠투엔)":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"에스아이":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"엠아이텍":{"평일":["중식"],"토요일":[],"일요일":[]},"연암":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"오뚜기(평택)":{"평일":["조식","중식"],"토요일":[],"일요일":[]},"오뚜기(포승)":{"평일":["조식","중식","석식","야식"],"토요일":[],"일요일":[]},"오뚜기(논산)":{"평일":["중식"],"토요일":[],"일요일":[]},"유니젠":{"평일":["중식","석식"],"토요일":["중식"],"일요일":[]},"윤지양행":{"평일":["중식","석식"],"토요일":["중식"],"일요일":[]},"일렉콤":{"평일":["조식","중식","석식"],"토요일":[],"일요일":[]},"지에스아이":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":[]},"청우코아":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"코오롱인더스트리":{"평일":["중식","석식"],"토요일":[],"일요일":["중식"]},"티엔씨":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"퓨어앤텍":{"평일":["중식","석식"],"토요일":["중식","석식"],"일요일":["중식","석식"]},"한보일렉트":{"평일":["중식","석식"],"토요일":["중식","석식"],"일요일":["중식","석식"]},"한양로보틱스":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"KC글라스":{"평일":["중식","석식","야식"],"토요일":["중식","석식","야식"],"일요일":["중식","석식","야식"]},"SK가스":{"평일":["중식","석식"],"토요일":["중식","석식"],"일요일":["중식","석식"]},"동인산업":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"한석시스템":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"퍼슨":{"평일":["중식"],"토요일":["중식"],"일요일":["중식"]},"다원체어스":{"평일":["중식"],"토요일":[],"일요일":[]},"쏘나브이씨코리아":{"평일":["조식","중식"],"토요일":[],"일요일":[]},"우진티엠씨":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"우보테크":{"평일":["조식","중식","석식"],"토요일":[],"일요일":[]},"파트라":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"한온시스템(아산)":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"한온시스템(둔포)":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"HY(에치와이)":{"평일":["조식","중식","석식"],"토요일":["조식","중식","석식"],"일요일":["조식","중식","석식"]},"나래산업":{"평일":["중식","석식","야식"],"토요일":["중식"],"일요일":[]},"한미1공장":{"평일":["조식","중식","석식","야식"],"토요일":[],"일요일":[]},"한미2공장":{"평일":["조식","중식","석식","야식"],"토요일":[],"일요일":[]},"퓨리나":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"한국바이린":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식"]},"디이엔티(오산)":{"평일":["조식","중식","석식"],"토요일":[],"일요일":[]},"수퍼빈(아이엠펙토리)":{"평일":["중식"],"토요일":[],"일요일":[]},"한국가스공사":{"평일":["중식","석식"],"토요일":["중식","석식"],"일요일":["중식","석식"]},"비씨젠(안산)":{"평일":["조식","중식","석식"],"토요일":[],"일요일":[]},"삼영잉크제조":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"디오토모티브":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"주강로보테크":{"평일":["조식","중식","석식"],"토요일":[],"일요일":[]},"피엘에스":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"이구산업":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"진보":{"평일":["조식","중식","석식"],"토요일":[],"일요일":[]},"이피에스 코리아(EPS)":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"두손":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"G푸드(지푸드)":{"평일":["중식"],"토요일":[],"일요일":[]},"머크":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"동아전기부품":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"바스노바":{"평일":["중식"],"토요일":[],"일요일":[]},"대한송유관":{"평일":["중식"],"토요일":[],"일요일":[]},"미소찬":{"평일":["중식"],"토요일":["중식"],"일요일":["중식"]},"비와이티":{"평일":["중식","석식"],"토요일":["중식","석식"],"일요일":["중식","석식"]},"대성아이엔지":{"평일":["중식","석식","야식"],"토요일":["중식","석식","야식"],"일요일":["중식","석식","야식"]},"무봉산수련원":{"평일":["조식","중식","석식"],"토요일":["조식","중식","석식"],"일요일":["조식","중식","석식"]},"진성티이씨 1공장":{"평일":["조식","중식","석식"],"토요일":["중식"],"일요일":[]},"진성티이씨 2공장":{"평일":["중식","석식"],"토요일":["중식"],"일요일":[]},"대코":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"동아전장(감곡)":{"평일":["중식"],"토요일":["중식"],"일요일":[]},"린데코리아":{"평일":["중식"],"토요일":[],"일요일":[]},"신세대여행사":{"평일":["조식","중식"],"토요일":[],"일요일":[]},"삼아알미늄":{"평일":["중식","석식","야식"],"토요일":["중식","석식","야식"],"일요일":["중식","석식","야식"]}};
+
+const ALL_SITES=Object.keys(SITE_MEALS);
+let mealState={},editingMeals=new Set(),openRows=new Set(),currentMeals=[];
+let adminRecords=[],adminLoaded=false;
+let autoRefreshTimer=null,lastAdminQuery={from:'',to:''};
+
+const todayStr=(()=>{
+  const now=new Date();
+  const kst=new Date(now.getTime()+9*60*60*1000);
+  return kst.toISOString().split('T')[0];
+})();
+const thisMonth=todayStr.slice(0,7);
+document.getElementById('date-input').value=todayStr;
+document.getElementById('admin-from').value=todayStr;
+document.getElementById('admin-to').value=todayStr;
+
+let isDark=localStorage.getItem('dark')==='1';
+function applyDark(){document.body.classList.toggle('dark',isDark);document.getElementById('dark-btn').textContent=isDark?'☀️':'🌙';}
+applyDark();
+window.toggleDark=()=>{isDark=!isDark;localStorage.setItem('dark',isDark?'1':'0');applyDark();};
+
+function getDayType(d){const day=new Date(d).getDay();return day===6?'토요일':day===0?'일요일':'평일';}
+function getMeals(site,date){return(SITE_MEALS[site]&&SITE_MEALS[site][getDayType(date)])||[];}
+function getManagerForSite(site){return MANAGERS.find(m=>m.sites.includes(site));}
+function getState(site,date,meal){
+  if(!mealState[site])mealState[site]={};
+  if(!mealState[site][date])mealState[site][date]={};
+  if(!mealState[site][date][meal])mealState[site][date][meal]={photo:null,submitted:false,notProvided:false};
+  return mealState[site][date][meal];
+}
+function cSite(){return document.getElementById('site-select').value;}
+function cDate(){return document.getElementById('date-input').value;}
+function cMgr(){return document.getElementById('manager-select').value;}
+function esc(s){return s.replace(/[^a-zA-Z0-9가-힣]/g,'_');}
+function showLoading(msg){document.getElementById('loading-text').textContent=msg||'처리 중...';document.getElementById('loading').classList.add('show');}
+function hideLoading(){document.getElementById('loading').classList.remove('show');}
+function showToast(msg,isError){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(isError?' error':'');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+
+function compressImage(file,maxWidth=1200,quality=0.82){
+  return new Promise((resolve,reject)=>{
+    const url=URL.createObjectURL(file);
+    const img=new Image();
+    img.onload=()=>{
+      try{
+        URL.revokeObjectURL(url);
+        const canvas=document.createElement('canvas');
+        let w=img.width,h=img.height;
+        // 너무 큰 이미지는 더 작게
+        if(w>2000||h>2000){maxWidth=1000;quality=0.78;}
+        if(w>maxWidth){h=Math.round(h*maxWidth/w);w=maxWidth;}
+        canvas.width=w;canvas.height=h;
+        const ctx=canvas.getContext('2d');
+        ctx.drawImage(img,0,0,w,h);
+        canvas.toBlob(blob=>{
+          if(blob)resolve(blob);
+          else reject(new Error('이미지 변환 실패'));
+        },'image/jpeg',quality);
+      }catch(e){reject(e);}
+    };
+    img.onerror=()=>{
+      URL.revokeObjectURL(url);
+      // 압축 실패시 원본 그대로 업로드
+      resolve(file);
+    };
+    img.src=url;
+  });
+}
+
+// Firebase 설정 불러오기
+async function loadConfig(){
+  try{
+    const snap=await getDoc(doc(db,'config','settings'));
+    if(snap.exists()){
+      const d=snap.data();
+      if(d.managers)MANAGERS=d.managers;
+      if(d.siteMeals)SITE_MEALS=d.siteMeals;
+    }
+  }catch(e){console.error('설정 로드 실패',e);}
+}
+
+async function saveConfig(){
+  await setDoc(doc(db,'config','settings'),{managers:MANAGERS,siteMeals:SITE_MEALS,updatedAt:new Date().toISOString()});
+}
+
+// 초기화
+async function init(){
+  showLoading('불러오는 중...');
+  await loadConfig();
+  hideLoading();
+
+  const mSel=document.getElementById('manager-select');
+  const aMgr=document.getElementById('admin-manager');
+  [...MANAGERS].sort((a,b)=>a.name.localeCompare(b.name,'ko')).forEach(m=>{mSel.appendChild(new Option(m.name,m.name));aMgr.appendChild(new Option(m.name,m.name));});
+
+  // 저장된 매니저 이름 자동 선택
+  const savedManager=localStorage.getItem('savedManager');
+  if(savedManager&&MANAGERS.find(m=>m.name===savedManager)){
+    mSel.value=savedManager;
+    await window.onManagerChange();
+  }
+  // 설정 탭 비밀번호
+const SETTINGS_PW = "8770";
+window.checkSettingsPw=function(){
+  const val=document.getElementById("settings-pw-input").value;
+  if(val===SETTINGS_PW){
+    document.getElementById("settings-lock").style.display="none";
+    document.getElementById("settings-content").style.display="block";
+    document.getElementById("settings-pw-error").textContent="";
+    renderSiteSettings();
+  } else {
+    document.getElementById("settings-pw-error").textContent="비밀번호가 틀렸어요";
+    document.getElementById("settings-pw-input").value="";
+  }
+};
+window.lockSettings=function(){
+  document.getElementById("settings-lock").style.display="block";
+  document.getElementById("settings-content").style.display="none";
+  document.getElementById("settings-pw-input").value="";
+};
+ 렌더
+  renderSiteSettings();
+}
+init();
+
+async function loadSubmitState(site,date,manager){
+  try{
+    const q=query(collection(db,'submissions'),where('site','==',site),where('date','==',date),where('manager','==',manager));
+    const snap=await getDocs(q);
+    snap.forEach(d=>{
+      const data=d.data();
+      const st=getState(site,date,data.meal);
+      if(data.notProvided){
+        st.notProvided=true;
+      } else {
+        st.submitted=true;
+        st.photo={preview:(data.photoURLs||[])[0],url:(data.photoURLs||[])[0]};
+      }
+    });
+  }catch(e){console.error(e);}
+}
+
+function updateSubmitAllBtn(){
+  const site=cSite(),date=cDate();
+  if(!site||!currentMeals.length){document.getElementById('submit-all-wrap').style.display='none';return;}
+  const activeMeals=currentMeals.filter(m=>!getState(site,date,m).notProvided);
+  const total=activeMeals.length;
+  const withPhoto=activeMeals.filter(m=>{const st=getState(site,date,m);return st.photo&&!st.submitted;}).length;
+  const submitted=activeMeals.filter(m=>getState(site,date,m).submitted).length;
+  const wrap=document.getElementById('submit-all-wrap');
+  const btn=document.getElementById('btn-submit-all');
+  const label=document.getElementById('submit-all-label');
+  const status=document.getElementById('submit-status');
+  wrap.style.display='block';
+  const notProvided=currentMeals.filter(m=>getState(site,date,m).notProvided).length;
+  const canSubmit=withPhoto>0||notProvided>0;
+  if(submitted===total&&total>0&&notProvided===0){
+    label.textContent='모두 제출 완료 ✓';btn.disabled=true;btn.style.opacity='0.5';status.textContent=`전체 ${total}개 끼니 제출 완료`;
+  } else if(canSubmit){
+    const parts=[];
+    if(withPhoto>0)parts.push(`사진 ${withPhoto}개`);
+    if(notProvided>0)parts.push(`제공안함 ${notProvided}개`);
+    label.textContent=`모두 제출 (${parts.join(' · ')})`;btn.disabled=false;btn.style.opacity='1';
+    status.textContent=`${parts.join(', ')} 제출 준비됨`;
+  } else {
+    label.textContent='모두 제출';btn.disabled=true;btn.style.opacity='0.4';status.textContent='사진을 첨부하거나 제공안함을 선택해주세요';
+  }
+}
+
+window.onManagerChange=async function(){
+  const name=cMgr(),siteSel=document.getElementById('site-select'),hint=document.getElementById('site-hint');
+  if(name)localStorage.setItem('savedManager',name);
+  openRows.clear();editingMeals.clear();currentMeals=[];siteSel.innerHTML='';
+  if(!name){siteSel.appendChild(new Option('먼저 매니저를 선택하세요',''));siteSel.disabled=true;hint.textContent='';renderMealRows([]);document.getElementById('submit-all-wrap').style.display='none';return;}
+  const mgr=MANAGERS.find(m=>m.name===name);
+  siteSel.disabled=false;
+  if(mgr.sites.length>1)siteSel.appendChild(new Option('사업장을 선택하세요',''));
+  mgr.sites.forEach(s=>siteSel.appendChild(new Option(s,s)));
+  if(mgr.sites.length===1){siteSel.value=mgr.sites[0];hint.textContent='담당 사업장 1곳';await window.onSiteChange();}
+  else{hint.textContent=`담당 사업장 ${mgr.sites.length}곳`;renderMealRows([]);}
+};
+
+window.onSiteChange=async function(){
+  openRows.clear();editingMeals.clear();
+  const site=cSite(),date=cDate(),mgr=cMgr();
+  if(!site){currentMeals=[];renderMealRows([]);document.getElementById('submit-all-wrap').style.display='none';return;}
+  if(mgr){showLoading('불러오는 중...');await loadSubmitState(site,date,mgr);hideLoading();}
+  currentMeals=getMeals(site,date);
+  renderMealRows(currentMeals);updateSubmitAllBtn();
+};
+
+window.onDateChange=async function(){
+  openRows.clear();editingMeals.clear();
+  const site=cSite(),date=cDate(),mgr=cMgr();
+  if(!site)return;
+  if(mgr){showLoading('불러오는 중...');await loadSubmitState(site,date,mgr);hideLoading();}
+  currentMeals=getMeals(site,date);
+  renderMealRows(currentMeals);updateSubmitAllBtn();
+};
+
+window.toggleRow=function(meal){
+  const id=esc(meal),row=document.getElementById('row-'+id);if(!row)return;
+  if(openRows.has(meal)){openRows.delete(meal);row.classList.remove('open');}
+  else{openRows.add(meal);row.classList.add('open');}
+};
+
+function renderMealRows(meals){
+  const c=document.getElementById('meal-rows');
+  if(!meals.length){c.innerHTML='<div class="meal-empty-hint">사업장을 선택하면 끼니가 표시됩니다</div>';return;}
+  c.innerHTML=meals.map(m=>buildMealRow(m)).join('');
+}
+
+function buildMealRow(meal){
+  const site=cSite(),date=cDate(),st=getState(site,date,meal),id=esc(meal);
+  const isEditing=editingMeals.has(meal),isOpen=openRows.has(meal);
+  let right='';
+  if(st.notProvided)right=`<span style="font-size:12px;padding:3px 10px;border-radius:99px;background:var(--bg3);color:var(--text3);font-weight:500;">제공안함</span>`;
+  else if(st.submitted&&!isEditing)right=`<span class="badge-done"><span class="badge-dot"></span>제출완료</span><button class="btn-edit" onclick="event.stopPropagation();startEdit('${meal}')">수정</button>`;
+  const thumb=st.photo?`<img class="meal-thumb" src="${st.photo.preview}"/>`:`<div class="meal-thumb-placeholder"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
+  let panel='';
+  if(st.notProvided){
+    panel=`<div style="padding:12px 0;display:flex;align-items:center;gap:8px;"><span style="font-size:13px;color:var(--text2);">오늘 해당 끼니 제공 없음</span><button onclick="cancelNotProvided('${meal}')" style="font-size:12px;padding:4px 10px;border:0.5px solid var(--border);border-radius:6px;background:var(--bg3);color:var(--text2);cursor:pointer;font-family:inherit;">취소</button></div>`;
+  } else if(!st.submitted||isEditing){
+    const hasPhoto=!!st.photo;
+    const previewHtml=hasPhoto?`<div class="photo-preview-large"><img src="${st.photo.preview}"/><button class="photo-del-large" onclick="removePhoto('${meal}')">✕</button></div>`:'';
+    panel=`<div style="display:flex;gap:8px;flex-direction:column;"><label class="btn-upload${hasPhoto?' has-photo':''}"><svg class="upload-icon-sm" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg><span>${hasPhoto?'사진 변경':'사진 추가'}</span><input type="file" accept="image/*" onchange="handleFile(this,'${meal}')"/></label>${previewHtml}<button onclick="setNotProvided('${meal}')" style="width:100%;padding:10px;font-size:13px;font-weight:500;border:0.5px solid var(--border);border-radius:10px;background:var(--bg3);color:var(--text2);cursor:pointer;font-family:inherit;">해당 끼니 제공 안함</button></div>`;
+  } else if(st.photo){
+    panel=`<div class="photo-preview-large" style="margin-top:0"><img src="${st.photo.preview}"/></div>`;
+  }
+  const rowClass=['meal-row',st.notProvided?'not-provided':st.submitted&&!isEditing?'submitted':st.photo?'has-photo':'',isOpen?'open':''].filter(Boolean).join(' ');
+  return `<div class="${rowClass}" id="row-${id}">
+    <div class="meal-row-header" onclick="toggleRow('${meal}')">
+      <div class="meal-left">${thumb}<span class="meal-name">${meal}</span></div>
+      <div class="meal-right">${right}<svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+    </div>
+    <div class="meal-panel">${panel}</div>
+  </div>`;
+}
+
+function refreshRow(meal){const id=esc(meal),el=document.getElementById('row-'+id);if(!el)return;const t=document.createElement('div');t.innerHTML=buildMealRow(meal);el.replaceWith(t.firstElementChild);}
+
+window.setNotProvided=function(meal){
+  const st=getState(cSite(),cDate(),meal);
+  st.notProvided=true;st.photo=null;
+  openRows.add(meal);refreshRow(meal);updateSubmitAllBtn();
+};
+window.cancelNotProvided=function(meal){
+  const st=getState(cSite(),cDate(),meal);
+  st.notProvided=false;
+  refreshRow(meal);updateSubmitAllBtn();
+};
+
+window.handleFile=function(input,meal){
+  const file=input.files[0];if(!file){input.value='';return;}
+  const st=getState(cSite(),cDate(),meal);
+  const r=new FileReader();
+  r.onload=e=>{st.photo={preview:e.target.result,file};openRows.add(meal);refreshRow(meal);updateSubmitAllBtn();};
+  r.readAsDataURL(file);input.value='';
+};
+window.removePhoto=function(meal){const st=getState(cSite(),cDate(),meal);st.photo=null;refreshRow(meal);updateSubmitAllBtn();};
+
+async function uploadMeal(site,date,manager,meal,retry=0){
+  const st=getState(site,date,meal);
+  if(!st.photo||st.submitted)return;
+  try{
+    const compressed=await compressImage(st.photo.file);
+    const storageRef=ref(storage,`submissions/${date}/${site}/${meal}/${Date.now()}.jpg`);
+    await uploadBytes(storageRef,compressed);
+    const url=await getDownloadURL(storageRef);
+    const docId=`${manager}_${site}_${date}_${meal}`.replace(/[^a-zA-Z0-9가-힣_-]/g,'_');
+    await setDoc(doc(db,'submissions',docId),{manager,site,date,meal,photoURLs:[url],submittedAt:new Date().toISOString()});
+    st.submitted=true;st.photo={preview:url,url};
+  }catch(e){
+    if(retry<2){
+      // 1초 대기 후 재시도
+      await new Promise(r=>setTimeout(r,1000));
+      return uploadMeal(site,date,manager,meal,retry+1);
+    }
+    throw e;
+  }
+}
+
+window.submitAll=async function(){
+  const site=cSite(),date=cDate(),manager=cMgr();
+  if(!manager){showToast('매니저를 먼저 선택해주세요',true);return;}
+  const toSubmit=currentMeals.filter(m=>{const st=getState(site,date,m);return st.photo&&!st.submitted&&!st.notProvided;});
+  const notProvidedMealsCheck=currentMeals.filter(m=>getState(site,date,m).notProvided);
+  if(!toSubmit.length&&!notProvidedMealsCheck.length){showToast('사진을 첨부하거나 제공안함을 선택해주세요',true);return;}
+  document.getElementById('btn-submit-all').disabled=true;
+  // 제공안함 끼니 Firebase 기록
+  const notProvidedMeals=currentMeals.filter(m=>getState(site,date,m).notProvided);
+  for(const meal of notProvidedMeals){
+    try{
+      const docId=`${manager}_${site}_${date}_${meal}`.replace(/[^a-zA-Z0-9가-힣_-]/g,'_');
+      await setDoc(doc(db,'submissions',docId),{manager,site,date,meal,notProvided:true,photoURLs:[],submittedAt:new Date().toISOString()});
+    }catch(e){console.error('제공안함 저장 실패',e);}
+  }
+  // 사진 있는 끼니 업로드
+  let done=0;
+  for(const meal of toSubmit){
+    document.getElementById('submit-all-label').textContent=`${meal} 제출 중... (${done+1}/${toSubmit.length})`;
+    try{
+      await uploadMeal(site,date,manager,meal);
+      done++;editingMeals.delete(meal);openRows.delete(meal);refreshRow(meal);
+    }catch(e){
+      showToast(`${meal} 제출 실패 — 사진을 다시 첨부 후 재시도해 주세요`,true);
+      console.error(meal,e);
+    }
+  }
+  updateSubmitAllBtn();
+  showToast(`제출 완료! (사진 ${done}개${notProvidedMeals.length>0?' · 제공안함 '+notProvidedMeals.length+'개':''})`)  ;
+};
+
+window.startEdit=function(meal){
+  const st=getState(cSite(),cDate(),meal);st.submitted=false;
+  editingMeals.add(meal);openRows.add(meal);refreshRow(meal);updateSubmitAllBtn();
+};
+
+window.switchTab=function(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+tab).classList.add('active');
+  if(tab==='admin'){startAutoRefresh();autoLoadToday();}else stopAutoRefresh();
+  if(tab==='settings'){document.getElementById('settings-pw-input').value='';document.getElementById('settings-pw-error').textContent='';}
+};
+
+// 관리자 현황
+window.setQuickDate=async function(type){
+  const yesterday=new Date(new Date().getTime()+9*60*60*1000);
+  yesterday.setDate(yesterday.getDate()-1);
+  const yesterdayStr=yesterday.toISOString().split('T')[0];
+  const from=type==='yesterday'?yesterdayStr:todayStr;
+  const to=type==='yesterday'?yesterdayStr:todayStr;
+  document.getElementById('admin-from').value=from;
+  document.getElementById('admin-to').value=to;
+  document.getElementById('btn-yesterday').style.background=type==='yesterday'?'var(--text1)':'var(--bg2)';
+  document.getElementById('btn-yesterday').style.color=type==='yesterday'?'var(--bg2)':'var(--text1)';
+  document.getElementById('btn-today').style.background=type==='today'?'var(--text1)':'var(--bg2)';
+  document.getElementById('btn-today').style.color=type==='today'?'var(--bg2)':'var(--text1)';
+  await window.loadAdminData();
+};
+
+async function autoLoadToday(){
+  if(lastAdminQuery.from)return;
+  document.getElementById('admin-from').value=todayStr;
+  document.getElementById('admin-to').value=todayStr;
+  document.getElementById('btn-today').style.background='var(--text1)';
+  document.getElementById('btn-today').style.color='var(--bg2)';
+  await window.loadAdminData();
+}
+
+function startAutoRefresh(){
+  stopAutoRefresh();
+  autoRefreshTimer=setInterval(async()=>{
+    if(!lastAdminQuery.from||!lastAdminQuery.to)return;
+    try{
+      const q=query(collection(db,'submissions'),where('date','>=',lastAdminQuery.from),where('date','<=',lastAdminQuery.to));
+      const snap=await getDocs(q);adminRecords=[];snap.forEach(d=>adminRecords.push(d.data()));
+      renderAdminGrid();
+      document.getElementById('refresh-status').textContent=`마지막 업데이트: ${new Date().toLocaleTimeString('ko-KR')}`;
+    }catch(e){}
+  },30000);
+  document.getElementById('refresh-status').textContent='자동 새로고침 활성 (30초마다)';
+}
+function stopAutoRefresh(){if(autoRefreshTimer){clearInterval(autoRefreshTimer);autoRefreshTimer=null;}document.getElementById('refresh-status').textContent='자동 새로고침 대기 중';}
+
+window.resetAdmin=function(){
+  document.getElementById('admin-from').value=todayStr;document.getElementById('admin-to').value=todayStr;
+  document.getElementById('admin-manager').value='';
+  document.getElementById('grid-wrap').innerHTML='<div class="empty-state">날짜를 선택하고 조회해주세요</div>';
+  document.getElementById('btn-excel').disabled=true;adminRecords=[];lastAdminQuery={from:'',to:''};
+};
+
+window.onAdminManagerChange=function(){
+  if(lastAdminQuery.from&&lastAdminQuery.to)window.loadAdminData();
+};
+
+window.loadAdminData=async function(){
+  const from=document.getElementById('admin-from').value,to=document.getElementById('admin-to').value;
+  if(!from||!to){showToast('날짜를 선택해주세요',true);return;}
+  showLoading('데이터 불러오는 중...');
+  try{
+    const q=query(collection(db,'submissions'),where('date','>=',from),where('date','<=',to));
+    const snap=await getDocs(q);adminRecords=[];snap.forEach(d=>adminRecords.push(d.data()));
+    lastAdminQuery={from,to};renderAdminGrid();
+    document.getElementById('btn-excel').disabled=adminRecords.length===0;
+    document.getElementById('refresh-status').textContent=`마지막 업데이트: ${new Date().toLocaleTimeString('ko-KR')}`;
+  }catch(e){showToast('조회 실패: '+e.message,true);}
+  hideLoading();
+};
+
+function getDates(from,to){const d=[],c=new Date(from),e=new Date(to);while(c<=e){d.push(c.toISOString().split('T')[0]);c.setDate(c.getDate()+1);}return d;}
+
+function renderAdminGrid(){
+  const from=lastAdminQuery.from,to=lastAdminQuery.to;if(!from||!to)return;
+  const mf=document.getElementById('admin-manager').value,wrap=document.getElementById('grid-wrap');
+  const dates=getDates(from,to);
+  const cols=[];dates.forEach(d=>['조식','중식','석식','야식'].forEach(m=>cols.push({date:d,meal:m})));
+  let sites=ALL_SITES;
+  if(mf){const mg=MANAGERS.find(m=>m.name===mf);sites=mg?mg.sites:[];}
+  const recMap={};adminRecords.forEach(r=>{recMap[`${r.site}|${r.date}|${r.meal}`]=r.photoURLs||[];});
+  let html='<table class="admin-grid"><thead><tr><th class="th-site" rowspan="2">사업장</th>';
+  dates.forEach((d,di)=>html+=`<th class="th-date${di>0?' date-sep':''}" colspan="4">${d}</th>`);
+  html+='</tr><tr>';
+  dates.forEach((d,di)=>['조식','중식','석식','야식'].forEach((m,mi)=>html+=`<th class="th-meal${mi===0&&di>0?' date-sep':''}">${m}</th>`));
+  html+='</tr></thead><tbody>';
+  sites.forEach(site=>{
+    html+=`<tr><td class="td-site">${site}</td>`;
+    cols.forEach((col,ci)=>{
+      const sep=['조식','중식','석식','야식'].indexOf(col.meal)===0&&ci>0?' date-sep':'';
+      const meals=getMeals(site,col.date);
+      if(!meals.includes(col.meal)){html+=`<td class="cell cell-gray${sep}"></td>`;return;}
+      const key=`${site}|${col.date}|${col.meal}`;
+      const urls=recMap[key];
+      html+=urls&&urls.length?`<td class="cell cell-o${sep}" onmouseenter="showPreview(event,'${key}')" onmouseleave="hidePreview()" onclick="openPhotoModal('${key}')"><span class="cell-symbol">O</span></td>`:`<td class="cell cell-x${sep}"><span class="cell-symbol">X</span></td>`;
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>';wrap.innerHTML=html;
+}
+
+// 엑셀 다운로드
+window.downloadExcel=function(){
+  if(!adminRecords.length){showToast('먼저 조회해주세요',true);return;}
+  const from=lastAdminQuery.from,to=lastAdminQuery.to;
+  const dates=getDates(from,to);
+  const recMap={};
+  adminRecords.forEach(r=>{recMap[`${r.site}|${r.date}|${r.meal}`]={manager:r.manager,submittedAt:r.submittedAt};});
+
+  const MEALS=['조식','중식','석식','야식'];
+  const wb=XLSX.utils.book_new();
+
+  // ── 시트1: 제출 현황표 ──
+  const rows=[];
+  // 날짜 헤더 행 (병합용)
+  const dateRow=['사업장'];
+  const mealRow=[''];
+  dates.forEach(d=>{
+    MEALS.forEach((m,i)=>{
+      dateRow.push(i===0?d:'');
+      mealRow.push(m);
+    });
+  });
+  rows.push(dateRow);
+  rows.push(mealRow);
+
+  Object.keys(SITE_MEALS).forEach(site=>{
+    const row=[site];
+    dates.forEach(d=>{
+      MEALS.forEach(m=>{
+        const siteMeals=getMeals(site,d);
+        if(!siteMeals.includes(m)){row.push('');}
+        else{
+          const key=`${site}|${d}|${m}`;
+          row.push(recMap[key]?'O':'X');
+        }
+      });
+    });
+    rows.push(row);
+  });
+
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+
+  // 열 너비 설정
+  const colWidths=[{wch:18}]; // 사업장
+  dates.forEach(()=>MEALS.forEach(()=>colWidths.push({wch:6})));
+  ws['!cols']=colWidths;
+
+  // 날짜별 병합
+  const merges=[];
+  dates.forEach((d,di)=>{
+    const startCol=1+di*MEALS.length;
+    merges.push({s:{r:0,c:startCol},e:{r:0,c:startCol+MEALS.length-1}});
+  });
+  ws['!merges']=merges;
+
+  // 셀 스타일
+  const range=XLSX.utils.decode_range(ws['!ref']);
+  for(let R=range.s.r;R<=range.e.r;R++){
+    for(let C=range.s.c;C<=range.e.c;C++){
+      const addr=XLSX.utils.encode_cell({r:R,c:C});
+      if(!ws[addr])ws[addr]={v:'',t:'s'};
+      const cell=ws[addr];
+      // 공통 스타일
+      cell.s={
+        alignment:{horizontal:'center',vertical:'center',wrapText:false},
+        font:{name:'맑은 고딕',sz:10},
+        border:{
+          top:{style:'thin',color:{rgb:'CCCCCC'}},
+          bottom:{style:'thin',color:{rgb:'CCCCCC'}},
+          left:{style:'thin',color:{rgb:'CCCCCC'}},
+          right:{style:'thin',color:{rgb:'CCCCCC'}}
+        }
+      };
+      // 헤더 행 (날짜/끼니)
+      if(R===0){
+        cell.s.fill={patternType:'solid',fgColor:{rgb:'1A3A5C'}};
+        cell.s.font={...cell.s.font,bold:true,color:{rgb:'FFFFFF'},sz:11};
+        cell.s.alignment.horizontal='center';
+      }
+      if(R===1){
+        cell.s.fill={patternType:'solid',fgColor:{rgb:'2D6A9F'}};
+        cell.s.font={...cell.s.font,bold:true,color:{rgb:'FFFFFF'}};
+      }
+      // 사업장 열
+      if(C===0&&R>1){
+        cell.s.fill={patternType:'solid',fgColor:{rgb:'F5F5F5'}};
+        cell.s.font={...cell.s.font,bold:true};
+        cell.s.alignment.horizontal='left';
+      }
+      // O 셀 (제출)
+      if(cell.v==='O'){
+        cell.s.fill={patternType:'solid',fgColor:{rgb:'5DCAA5'}};
+        cell.s.font={...cell.s.font,bold:true,color:{rgb:'085041'}};
+      }
+      // X 셀 (미제출)
+      if(cell.v==='X'){
+        cell.s.font={...cell.s.font,color:{rgb:'BBBBBB'}};
+      }
+      // 빈 셀 (끼니 없음) - 회색
+      if(cell.v===''&&R>1&&C>0){
+        cell.s.fill={patternType:'solid',fgColor:{rgb:'EEEEEE'}};
+      }
+    }
+  }
+  // 행 높이
+  ws['!rows']=[{hpt:22},{hpt:18}];
+
+  XLSX.utils.book_append_sheet(wb,ws,'제출 현황');
+
+  // ── 시트2: 제출 상세 내역 ──
+  const detailRows=[['날짜','사업장','끼니','담당 매니저','제출 시각']];
+  adminRecords
+    .sort((a,b)=>a.date.localeCompare(b.date)||a.site.localeCompare(b.site))
+    .forEach(r=>{
+      const t=r.submittedAt?new Date(r.submittedAt).toLocaleString('ko-KR'):'';
+      detailRows.push([r.date,r.site,r.meal,r.manager||'',t]);
+    });
+  const ws2=XLSX.utils.aoa_to_sheet(detailRows);
+  ws2['!cols']=[{wch:12},{wch:18},{wch:8},{wch:12},{wch:20}];
+  // 헤더 스타일
+  ['A1','B1','C1','D1','E1'].forEach(addr=>{
+    if(!ws2[addr])return;
+    ws2[addr].s={fill:{patternType:'solid',fgColor:{rgb:'1A3A5C'}},font:{bold:true,color:{rgb:'FFFFFF'},name:'맑은 고딕',sz:10},alignment:{horizontal:'center',vertical:'center'}};
+  });
+  XLSX.utils.book_append_sheet(wb,ws2,'제출 상세');
+
+  XLSX.writeFile(wb,`보존식현황_${from}_${to}.xlsx`);
+  showToast('엑셀 다운로드 완료!');
+};
+
+// 호버 프리뷰
+const prevEl=document.getElementById('hover-preview'),prevPhotos=document.getElementById('preview-photos'),prevLabel=document.getElementById('preview-label');
+window.showPreview=function(e,key){
+  const recMap={};adminRecords.forEach(r=>{recMap[`${r.site}|${r.date}|${r.meal}`]={urls:r.photoURLs||[],notProvided:r.notProvided||false};});
+  const rec=recMap[key];const urls=rec?rec.urls:[];if(!urls.length)return;
+  const parts=key.split('|');prevLabel.textContent=`${parts[0]} · ${parts[2]}`;
+  prevPhotos.innerHTML=urls.slice(0,1).map(url=>`<img class="preview-img" src="${url}" onerror="this.style.display='none'"/>`).join('');
+  prevEl.classList.add('visible');movePreview(e);
+};
+function movePreview(e){const pw=210,ph=220;let x=e.clientX+12,y=e.clientY+12;if(x+pw>window.innerWidth)x=e.clientX-pw-8;if(y+ph>window.innerHeight)y=e.clientY-ph-8;prevEl.style.left=x+'px';prevEl.style.top=y+'px';}
+document.addEventListener('mousemove',e=>{if(prevEl.classList.contains('visible'))movePreview(e);});
+window.hidePreview=function(){prevEl.classList.remove('visible');};
+window.openPhotoModal=function(key){
+  const recMap={};adminRecords.forEach(r=>{recMap[`${r.site}|${r.date}|${r.meal}`]={urls:r.photoURLs||[],notProvided:r.notProvided||false};});
+  const rec=recMap[key];const urls=rec?rec.urls:[];if(!urls.length)return;
+  const parts=key.split('|');
+  document.getElementById('photo-modal-img').src=urls[0];
+  document.getElementById('photo-modal-label').textContent=`${parts[0]} · ${parts[1]} · ${parts[2]}`;
+  document.getElementById('photo-modal').classList.add('open');
+};
+window.closePhotoModal=function(){
+  document.getElementById('photo-modal').classList.remove('open');
+  document.getElementById('photo-modal-img').src='';
+};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePhotoModal();});
+
+
+// 설정 탭 비밀번호
+const SETTINGS_PW = "8770";
+window.checkSettingsPw=function(){
+  const val=document.getElementById("settings-pw-input").value;
+  if(val===SETTINGS_PW){
+    document.getElementById("settings-lock").style.display="none";
+    document.getElementById("settings-content").style.display="block";
+    document.getElementById("settings-pw-error").textContent="";
+    renderSiteSettings();
+  } else {
+    document.getElementById("settings-pw-error").textContent="비밀번호가 틀렸어요";
+    document.getElementById("settings-pw-input").value="";
+  }
+};
+window.lockSettings=function(){
+  document.getElementById("settings-lock").style.display="block";
+  document.getElementById("settings-content").style.display="none";
+  document.getElementById("settings-pw-input").value="";
+};
+
+function renderSiteSettings(){
+  const list=document.getElementById('site-settings-list');
+  const sitesHtml=Object.keys(SITE_MEALS).map(site=>{
+    const manager=getManagerForSite(site);
+    const managerName=manager?.name||'미지정';
+    const meals=SITE_MEALS[site];
+    return `<div class="site-card" id="scard-${esc(site)}">
+      <div class="site-card-header" onclick="toggleSiteCard('${site}')">
+        <div>
+          <div class="site-card-name">${site}</div>
+          <div class="site-card-info">담당: ${managerName}</div>
+        </div>
+        <svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="site-card-panel">
+        <div class="panel-section-label">담당 매니저</div>
+        <select id="mgr-sel-${esc(site)}" style="height:44px;font-size:15px;">
+          ${[...MANAGERS].sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(m=>`<option value="${m.name}"${m.name===managerName?' selected':''}>${m.name}</option>`).join('')}
+        </select>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:12px;color:var(--text3);white-space:nowrap;">새 매니저:</span>
+          <input type="text" id="new-mgr-${esc(site)}" placeholder="새 매니저 이름 (없으면 비워두세요)" style="height:40px;font-size:14px;" />
+        </div>
+        ${ALL_DAYS.map(day=>`
+          <div class="day-row">
+            <div class="panel-section-label">${day}</div>
+            <div class="meal-chips" id="chips-${esc(site)}-${esc(day)}">
+              ${ALL_MEAL_OPTIONS.map(meal=>{
+                const on=(meals[day]||[]).includes(meal);
+                return `<div class="meal-chip${on?' on':''}" onclick="toggleMealChip(this,'${site}','${day}','${meal}')">${meal}</div>`;
+              }).join('')}
+            </div>
+          </div>`).join('')}
+        <div style="display:flex;gap:8px;margin-top:16px;">
+          <button class="btn-save" style="flex:1;" onclick="saveSiteSettings('${site}')">저장</button>
+          <button onclick="deleteSite('${site}')" style="padding:0 14px;height:44px;font-size:13px;font-weight:500;background:none;border:1px solid var(--red);border-radius:10px;cursor:pointer;color:var(--red);white-space:nowrap;">삭제</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // 사업장 추가 폼
+  const addHtml=`<div style="background:var(--bg2);border:1.5px dashed var(--border);border-radius:12px;padding:16px;margin-top:8px;">
+    <div style="font-size:14px;font-weight:500;color:var(--text1);margin-bottom:12px;">+ 새 사업장 추가</div>
+    <div style="margin-bottom:10px;">
+      <label class="field-label">사업장 이름</label>
+      <input type="text" id="new-site-name" placeholder="사업장 이름 입력" style="height:44px;" />
+    </div>
+    <div style="margin-bottom:10px;">
+      <label class="field-label">담당 매니저</label>
+      <div style="display:flex;gap:8px;">
+        <select id="new-site-manager" style="height:44px;flex:1;">
+          <option value="">기존 매니저 선택</option>
+          ${[...MANAGERS].sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(m=>`<option value="${m.name}">${m.name}</option>`).join('')}
+        </select>
+      </div>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;color:var(--text3);">또는 새 매니저:</span>
+        <input type="text" id="new-site-new-manager" placeholder="새 매니저 이름 입력" style="height:40px;flex:1;font-size:14px;" />
+      </div>
+    </div>
+    <button onclick="addNewSite()" style="width:100%;padding:12px;font-size:14px;font-weight:500;background:var(--text1);color:var(--bg2);border:none;border-radius:10px;cursor:pointer;font-family:inherit;margin-top:4px;">추가</button>
+  </div>`;
+
+  list.innerHTML=addHtml+sitesHtml;
+}
+
+window.toggleSiteCard=function(site){
+  const card=document.getElementById('scard-'+esc(site));
+  card.classList.toggle('open');
+};
+
+window.toggleMealChip=function(el,site,day,meal){
+  el.classList.toggle('on');
+};
+
+window.saveSiteSettings=async function(site){
+  showLoading('저장 중...');
+  try{
+    const selectedManager=document.getElementById('mgr-sel-'+esc(site)).value;
+    const newManagerInput=document.getElementById('new-mgr-'+esc(site));
+    const newManagerName=newManagerInput?newManagerInput.value.trim():'';
+    const newManager=newManagerName||selectedManager;
+    // 새 매니저면 추가
+    if(newManagerName&&!MANAGERS.find(m=>m.name===newManagerName)){
+      MANAGERS.push({name:newManagerName,sites:[]});
+    }
+    MANAGERS.forEach(m=>{m.sites=m.sites.filter(s=>s!==site);});
+    const mgr=MANAGERS.find(m=>m.name===newManager);
+    if(mgr&&!mgr.sites.includes(site))mgr.sites.push(site);
+    const newMeals={};
+    ALL_DAYS.forEach(day=>{
+      const chips=document.querySelectorAll(`#chips-${esc(site)}-${esc(day)} .meal-chip`);
+      newMeals[day]=Array.from(chips).filter(c=>c.classList.contains('on')).map(c=>c.textContent);
+    });
+    SITE_MEALS[site]=newMeals;
+    await saveConfig();
+    hideLoading();showToast(`${site} 설정 저장 완료!`);
+    refreshDropdowns();renderSiteSettings();
+  }catch(e){hideLoading();showToast('저장 실패: '+e.message,true);}
+};
+
+window.deleteSite=async function(site){
+  if(!confirm(`"${site}" 사업장을 삭제할까요?\n제출 데이터는 유지됩니다.`))return;
+  showLoading('삭제 중...');
+  try{
+    MANAGERS.forEach(m=>{m.sites=m.sites.filter(s=>s!==site);});
+    delete SITE_MEALS[site];
+    await saveConfig();
+    hideLoading();showToast(`${site} 삭제 완료!`);
+    refreshDropdowns();renderSiteSettings();
+  }catch(e){hideLoading();showToast('삭제 실패: '+e.message,true);}
+};
+
+window.addNewSite=async function(){
+  const name=document.getElementById('new-site-name').value.trim();
+  const existingManager=document.getElementById('new-site-manager').value;
+  const newManagerName=document.getElementById('new-site-new-manager').value.trim();
+  const managerName=newManagerName||existingManager;
+  if(!name){showToast('사업장 이름을 입력해주세요',true);return;}
+  if(SITE_MEALS[name]){showToast('이미 존재하는 사업장이에요',true);return;}
+  if(!managerName){showToast('담당 매니저를 선택하거나 입력해주세요',true);return;}
+  showLoading('추가 중...');
+  try{
+    // 새 매니저면 MANAGERS에 추가
+    if(newManagerName&&!MANAGERS.find(m=>m.name===newManagerName)){
+      MANAGERS.push({name:newManagerName,sites:[]});
+    }
+    SITE_MEALS[name]={'평일':[],'토요일':[],'일요일':[]};
+    const mgr=MANAGERS.find(m=>m.name===managerName);
+    if(mgr&&!mgr.sites.includes(name))mgr.sites.push(name);
+    await saveConfig();
+    hideLoading();showToast(`${name} 추가 완료!`);
+    document.getElementById('new-site-name').value='';
+    document.getElementById('new-site-new-manager').value='';
+    document.getElementById('new-site-manager').value='';
+    refreshDropdowns();renderSiteSettings();
+    setTimeout(()=>{
+      const card=document.getElementById('scard-'+esc(name));
+      if(card){card.classList.add('open');card.scrollIntoView({behavior:'smooth',block:'center'});}
+    },200);
+  }catch(e){hideLoading();showToast('추가 실패: '+e.message,true);}
+};
+
+function refreshDropdowns(){
+  const mSel=document.getElementById('manager-select');
+  const aMgr=document.getElementById('admin-manager');
+  const curVal=mSel.value;
+  mSel.innerHTML='<option value="">매니저를 선택하세요</option>';
+  aMgr.innerHTML='<option value="">전체 매니저</option>';
+  const sorted=[...MANAGERS].sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  sorted.forEach(m=>{mSel.appendChild(new Option(m.name,m.name));aMgr.appendChild(new Option(m.name,m.name));});
+  mSel.value=curVal;
+}
+</script>
+</body>
+</html>
