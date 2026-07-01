@@ -208,7 +208,7 @@ td.cell-x{background:var(--bg2);}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, collection, query, where, getDocs, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, query, where, getDocs, doc, setDoc, getDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 
 const firebaseConfig={apiKey:"AIzaSyCvFuJZ6hraxohPnvtAbhvBanXzXf8VE-E",authDomain:"bozon-sik.firebaseapp.com",projectId:"bozon-sik",storageBucket:"bozon-sik.firebasestorage.app",messagingSenderId:"350003291657",appId:"1:350003291657:web:9ef438cc880002c11ffad8"};
@@ -329,7 +329,7 @@ function updateSubmitAllBtn(){
   if(!site||!currentMeals.length){document.getElementById('submit-all-wrap').style.display='none';return;}
   const activeMeals=currentMeals.filter(m=>!getState(site,date,m).notProvided);
   const total=activeMeals.length;
-  const withPhoto=activeMeals.filter(m=>{const st=getState(site,date,m);return st.photo&&!st.submitted;}).length;
+  const withPhoto=activeMeals.filter(m=>{const st=getState(site,date,m);return st.photo&&st.photo.file&&!st.submitted;}).length;
   const submitted=activeMeals.filter(m=>getState(site,date,m).submitted).length;
   const notProvided=currentMeals.filter(m=>getState(site,date,m).notProvided).length;
   const canSubmit=withPhoto>0||notProvided>0;
@@ -397,7 +397,7 @@ function buildMealRow(meal){
   const isEditing=editingMeals.has(meal),isOpen=openRows.has(meal);
   let right='';
   if(st.notProvided)right=`<span style="font-size:12px;padding:3px 10px;border-radius:99px;background:var(--bg3);color:var(--text3);font-weight:500;">제공안함</span>`;
-  else if(st.submitted&&!isEditing)right=`<span class="badge-done"><span class="badge-dot"></span>제출완료</span><button class="btn-edit" onclick="event.stopPropagation();startEdit('${meal}')">수정</button>`;
+  else if(st.submitted&&!isEditing)right=`<span class="badge-done"><span class="badge-dot"></span>제출완료</span><button class="btn-edit" onclick="event.stopPropagation();startEdit('${meal}')">수정</button><button class="btn-edit" onclick="event.stopPropagation();cancelSubmission('${meal}')" style="border-color:var(--red);color:var(--red);">제출취소</button>`;
   const thumb=st.photo?`<img class="meal-thumb" src="${st.photo.preview}"/>`:`<div class="meal-thumb-placeholder"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
   let panel='';
   if(st.notProvided){
@@ -422,7 +422,26 @@ function buildMealRow(meal){
 function refreshRow(meal){const id=esc(meal),el=document.getElementById('row-'+id);if(!el)return;const t=document.createElement('div');t.innerHTML=buildMealRow(meal);el.replaceWith(t.firstElementChild);}
 
 window.setNotProvided=function(meal){const st=getState(cSite(),cDate(),meal);st.notProvided=true;st.photo=null;openRows.add(meal);refreshRow(meal);updateSubmitAllBtn();};
-window.cancelNotProvided=function(meal){const st=getState(cSite(),cDate(),meal);st.notProvided=false;refreshRow(meal);updateSubmitAllBtn();};
+window.cancelNotProvided=async function(meal){
+  const st=getState(cSite(),cDate(),meal);
+  if(st.submitted){await window.cancelSubmission(meal);return;}
+  st.notProvided=false;refreshRow(meal);updateSubmitAllBtn();
+};
+window.cancelSubmission=async function(meal){
+  const site=cSite(),date=cDate(),manager=cMgr();
+  if(!manager){showToast('매니저를 먼저 선택해주세요',true);return;}
+  if(!confirm(`${meal} 제출을 취소할까요?\n제출 현황에서 삭제되고 미제출 상태로 돌아갑니다.`))return;
+  showLoading('제출 취소 중...');
+  try{
+    const docId=`${manager}_${site}_${date}_${meal}`.replace(/[^a-zA-Z0-9가-힣_-]/g,'_');
+    await deleteDoc(doc(db,'submissions',docId));
+    const st=getState(site,date,meal);
+    st.submitted=false;st.photo=null;st.notProvided=false;
+    editingMeals.delete(meal);openRows.delete(meal);
+    refreshRow(meal);updateSubmitAllBtn();
+    hideLoading();showToast(`${meal} 제출 취소 완료`);
+  }catch(e){hideLoading();showToast('제출 취소 실패: '+e.message,true);}
+};
 window.handleFile=function(input,meal){
   const file=input.files[0];if(!file){input.value='';return;}
   const st=getState(cSite(),cDate(),meal);
@@ -435,7 +454,7 @@ window.removePhoto=function(meal){const st=getState(cSite(),cDate(),meal);st.pho
 // ── 개선된 업로드 함수 (30초 타임아웃 + 재시도) ──
 async function uploadMeal(site,date,manager,meal,retry=0){
   const st=getState(site,date,meal);
-  if(!st.photo||st.submitted)return;
+  if(!st.photo||!st.photo.file||st.submitted)return;
   try{
     const compressed=await compressImage(st.photo.file);
     const storageRef=ref(storage,`submissions/${date}/${site}/${meal}/${Date.now()}.jpg`);
@@ -453,7 +472,7 @@ async function uploadMeal(site,date,manager,meal,retry=0){
 window.submitAll=async function(){
   const site=cSite(),date=cDate(),manager=cMgr();
   if(!manager){showToast('매니저를 먼저 선택해주세요',true);return;}
-  const toSubmit=currentMeals.filter(m=>{const st=getState(site,date,m);return st.photo&&!st.submitted&&!st.notProvided;});
+  const toSubmit=currentMeals.filter(m=>{const st=getState(site,date,m);return st.photo&&st.photo.file&&!st.submitted&&!st.notProvided;});
   const notProvidedMealsCheck=currentMeals.filter(m=>getState(site,date,m).notProvided);
   if(!toSubmit.length&&!notProvidedMealsCheck.length){showToast('사진을 첨부하거나 제공안함을 선택해주세요',true);return;}
   document.getElementById('btn-submit-all').disabled=true;
