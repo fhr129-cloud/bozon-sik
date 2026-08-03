@@ -300,15 +300,19 @@ async function saveConfig(){
   await setDoc(doc(db,'config','settings'),{managers:MANAGERS,siteMeals:SITE_MEALS,updatedAt:new Date().toISOString()});
 }
 
+// 담당 사업장이 1곳 이상인 매니저만 (설정 탭에서는 전체 목록을 그대로 씀)
+function activeManagers(){return MANAGERS.filter(m=>m.sites&&m.sites.length>0).sort((a,b)=>a.name.localeCompare(b.name,'ko'));}
+
 async function init(){
   showLoading('불러오는 중...');
   await loadConfig();
   hideLoading();
   const mSel=document.getElementById('manager-select');
   const aMgr=document.getElementById('admin-manager');
-  [...MANAGERS].sort((a,b)=>a.name.localeCompare(b.name,'ko')).forEach(m=>{mSel.appendChild(new Option(m.name,m.name));aMgr.appendChild(new Option(m.name,m.name));});
+  activeManagers().forEach(m=>{mSel.appendChild(new Option(m.name,m.name));aMgr.appendChild(new Option(m.name,m.name));});
   const savedManager=localStorage.getItem('savedManager');
-  if(savedManager&&MANAGERS.find(m=>m.name===savedManager)){mSel.value=savedManager;await window.onManagerChange();}
+  if(savedManager&&activeManagers().find(m=>m.name===savedManager)){mSel.value=savedManager;await window.onManagerChange();}
+  else if(savedManager)localStorage.removeItem('savedManager');
 }
 init();
 
@@ -812,10 +816,15 @@ window.addNewSite=async function(){
 };
 
 function refreshDropdowns(){
-  const mSel=document.getElementById('manager-select'),aMgr=document.getElementById('admin-manager'),curVal=mSel.value;
+  const mSel=document.getElementById('manager-select'),aMgr=document.getElementById('admin-manager');
+  const curVal=mSel.value,curAdmin=aMgr.value;
   mSel.innerHTML='<option value="">매니저를 선택하세요</option>';aMgr.innerHTML='<option value="">전체 매니저</option>';
-  [...MANAGERS].sort((a,b)=>a.name.localeCompare(b.name,'ko')).forEach(m=>{mSel.appendChild(new Option(m.name,m.name));aMgr.appendChild(new Option(m.name,m.name));});
-  mSel.value=curVal;
+  const list=activeManagers();
+  list.forEach(m=>{mSel.appendChild(new Option(m.name,m.name));aMgr.appendChild(new Option(m.name,m.name));});
+  // 담당이 없어진 매니저가 선택돼 있었다면 선택 해제
+  mSel.value=list.find(m=>m.name===curVal)?curVal:'';
+  aMgr.value=list.find(m=>m.name===curAdmin)?curAdmin:'';
+  if(mSel.value!==curVal)window.onManagerChange();
 }
 </script>
 </body>
