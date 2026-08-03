@@ -173,7 +173,6 @@ td.cell-x{background:var(--bg2);}
       <button class="btn-green" id="btn-excel" onclick="downloadExcel()" disabled>📊 엑셀</button>
     </div>
 
-    <div id="missing-summary" style="display:none;margin-bottom:12px;"></div>
     <div class="grid-wrap" id="grid-wrap"><div class="empty-state">날짜를 선택하고 조회해주세요</div></div>
   </div>
   <div class="section" id="sec-settings">
@@ -581,7 +580,6 @@ window.resetAdmin=function(){
   document.getElementById('admin-from').value=todayStr;document.getElementById('admin-to').value=todayStr;
   document.getElementById('admin-manager').value='';
   document.getElementById('grid-wrap').innerHTML='<div class="empty-state">날짜를 선택하고 조회해주세요</div>';
-  document.getElementById('missing-summary').style.display='none';
   document.getElementById('btn-excel').disabled=true;adminRecords=[];lastAdminQuery={from:'',to:''};
 };
 
@@ -635,43 +633,6 @@ function renderAdminGrid(){
     html+='</tr>';
   });
   html+='</tbody></table>';wrap.innerHTML=html;
-  renderMissingSummary(dates,sites,recMap);
-}
-
-function renderMissingSummary(dates,sites,recMap){
-  const summary=document.getElementById('missing-summary');
-  if(!summary)return;
-  if(!dates.includes(todayStr)){summary.style.display='none';return;}
-  const missing=[];
-  sites.forEach(site=>{
-    const meals=getMeals(site,todayStr);
-    meals.forEach(meal=>{
-      const key=`${site}|${todayStr}|${meal}`;
-      const rec=recMap[key];
-      if(!rec||(!rec.urls.length&&!rec.notProvided)){
-        const mgr=getManagerForSite(site);
-        missing.push({site,meal,manager:mgr?.name||'-'});
-      }
-    });
-  });
-  if(!missing.length){
-    summary.style.display='block';
-    summary.innerHTML=`<div style="background:var(--green-light);border:1px solid var(--green);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:10px;"><span style="font-size:20px;">✅</span><div style="font-size:14px;font-weight:500;color:var(--green-dark);">오늘 모든 끼니 제출 완료!</div></div>`;
-    return;
-  }
-  const groups={};
-  missing.forEach(m=>{if(!groups[m.site])groups[m.site]={manager:m.manager,meals:[]};groups[m.site].meals.push(m.meal);});
-  const items=Object.entries(groups).map(([site,g])=>
-    `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid rgba(226,75,74,0.2);">
-      <div><span style="font-size:13px;font-weight:500;color:var(--text1);">${site}</span><span style="font-size:12px;color:var(--text2);margin-left:6px;">${g.manager}</span></div>
-      <div style="display:flex;gap:4px;">${g.meals.map(m=>`<span style="font-size:11px;padding:3px 8px;border-radius:99px;background:#FCEBEB;color:#A32D2D;">${m}</span>`).join('')}</div>
-    </div>`
-  ).join('');
-  summary.style.display='block';
-  summary.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--red);border-radius:12px;padding:14px 16px;">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span style="font-size:16px;">⚠️</span><div style="font-size:14px;font-weight:600;color:#A32D2D;">오늘 미제출 ${missing.length}건 (${Object.keys(groups).length}개 사업장)</div></div>
-    ${items}
-  </div>`;
 }
 
 window.downloadExcel=function(){
