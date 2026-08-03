@@ -208,7 +208,7 @@ td.cell-x{background:var(--bg2);}
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, collection, query, where, getDocs, doc, setDoc, getDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, query, where, getDocs, doc, setDoc, getDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 
 const firebaseConfig={apiKey:"AIzaSyCvFuJZ6hraxohPnvtAbhvBanXzXf8VE-E",authDomain:"bozon-sik.firebaseapp.com",projectId:"bozon-sik",storageBucket:"bozon-sik.firebasestorage.app",messagingSenderId:"350003291657",appId:"1:350003291657:web:9ef438cc880002c11ffad8"};
@@ -250,6 +250,14 @@ function cSite(){return document.getElementById('site-select').value;}
 function cDate(){return document.getElementById('date-input').value;}
 function cMgr(){return document.getElementById('manager-select').value;}
 function esc(s){return s.replace(/[^a-zA-Z0-9가-힣]/g,'_');}
+// 서버 타임스탬프(신규)와 ISO 문자열(기존 데이터) 둘 다 처리
+function fmtTime(v){
+  if(!v)return '';
+  if(typeof v==='string')return new Date(v).toLocaleString('ko-KR');
+  if(typeof v.toDate==='function')return v.toDate().toLocaleString('ko-KR');
+  if(typeof v.seconds==='number')return new Date(v.seconds*1000).toLocaleString('ko-KR');
+  return '';
+}
 function showLoading(msg){document.getElementById('loading-text').textContent=msg||'처리 중...';document.getElementById('loading').classList.add('show');}
 function hideLoading(){document.getElementById('loading').classList.remove('show');}
 function showToast(msg,isError){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(isError?' error':'');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
@@ -329,7 +337,9 @@ async function loadSubmitState(site,date,manager){
       if(st.submitted){st.submitted=false;st.photo=null;st.notProvided=false;}
     });
     snap.forEach(d=>{
-      const data=d.data();const st=getState(site,date,data.meal);
+      const data=d.data();
+      if(data.deleted)return;
+      const st=getState(site,date,data.meal);
       if(editingMeals.has(data.meal))return;
       if(data.notProvided){st.notProvided=true;st.submitted=true;}
       else{st.submitted=true;st.photo={preview:(data.photoURLs||[])[0],url:(data.photoURLs||[])[0]};}
@@ -443,11 +453,12 @@ window.cancelNotProvided=async function(meal){
 window.cancelSubmission=async function(meal){
   const site=cSite(),date=cDate(),manager=cMgr();
   if(!manager){showToast('매니저를 먼저 선택해주세요',true);return;}
-  if(!confirm(`${meal} 제출을 취소할까요?\n제출 현황에서 삭제되고 미제출 상태로 돌아갑니다.`))return;
+  if(!confirm(`${meal} 제출을 취소할까요?\n제출 현황에서 미제출 상태로 돌아갑니다.`))return;
   showLoading('제출 취소 중...');
   try{
     const docId=`${manager}_${site}_${date}_${meal}`.replace(/[^a-zA-Z0-9가-힣_-]/g,'_');
-    await deleteDoc(doc(db,'submissions',docId));
+    // 하드 삭제 대신 플래그 처리 — 누가 언제 취소했는지 남김
+    await setDoc(doc(db,'submissions',docId),{deleted:true,deletedBy:manager,deletedAt:serverTimestamp()},{merge:true});
     const st=getState(site,date,meal);
     st.submitted=false;st.photo=null;st.notProvided=false;
     editingMeals.delete(meal);openRows.delete(meal);
@@ -474,7 +485,7 @@ async function uploadMeal(site,date,manager,meal,retry=0){
     await withTimeout(uploadBytes(storageRef,compressed),30000,'업로드');
     const url=await withTimeout(getDownloadURL(storageRef),10000,'URL');
     const docId=`${manager}_${site}_${date}_${meal}`.replace(/[^a-zA-Z0-9가-힣_-]/g,'_');
-    await setDoc(doc(db,'submissions',docId),{manager,site,date,meal,photoURLs:[url],submittedAt:new Date().toISOString()});
+    await setDoc(doc(db,'submissions',docId),{manager,site,date,meal,photoURLs:[url],deleted:false,submittedAt:serverTimestamp(),clientTime:new Date().toISOString()});
     st.submitted=true;st.photo={preview:url,url};
   }catch(e){
     if(retry<2){await new Promise(r=>setTimeout(r,1500));return uploadMeal(site,date,manager,meal,retry+1);}
@@ -492,7 +503,7 @@ window.submitAll=async function(){
   for(const meal of notProvidedMeals){
     try{
       const docId=`${manager}_${site}_${date}_${meal}`.replace(/[^a-zA-Z0-9가-힣_-]/g,'_');
-      await setDoc(doc(db,'submissions',docId),{manager,site,date,meal,notProvided:true,photoURLs:[],submittedAt:new Date().toISOString()});
+      await setDoc(doc(db,'submissions',docId),{manager,site,date,meal,notProvided:true,photoURLs:[],deleted:false,submittedAt:serverTimestamp(),clientTime:new Date().toISOString()});
     }catch(e){console.error('제공안함 저장 실패',e);}
   }
   let done=0;
@@ -570,7 +581,7 @@ function startAutoRefresh(){
     if(!lastAdminQuery.from||!lastAdminQuery.to)return;
     try{
       const q=query(collection(db,'submissions'),where('date','>=',lastAdminQuery.from),where('date','<=',lastAdminQuery.to));
-      const snap=await getDocs(q);adminRecords=[];snap.forEach(d=>adminRecords.push(d.data()));
+      const snap=await getDocs(q);adminRecords=[];snap.forEach(d=>{const v=d.data();if(!v.deleted)adminRecords.push(v);});
       renderAdminGrid();
       document.getElementById('btn-excel').disabled=adminRecords.length===0;
       document.getElementById('refresh-status').textContent=`마지막 업데이트: ${new Date().toLocaleTimeString('ko-KR')}`;
@@ -595,7 +606,7 @@ window.loadAdminData=async function(){
   showLoading('데이터 불러오는 중...');
   try{
     const q=query(collection(db,'submissions'),where('date','>=',from),where('date','<=',to));
-    const snap=await getDocs(q);adminRecords=[];snap.forEach(d=>adminRecords.push(d.data()));
+    const snap=await getDocs(q);adminRecords=[];snap.forEach(d=>{const v=d.data();if(!v.deleted)adminRecords.push(v);});
     lastAdminQuery={from,to};renderAdminGrid();
     document.getElementById('btn-excel').disabled=adminRecords.length===0;
     document.getElementById('refresh-status').textContent=`마지막 업데이트: ${new Date().toLocaleTimeString('ko-KR')}`;
@@ -683,7 +694,7 @@ window.downloadExcel=function(){
   const detailRows=[['날짜','사업장','끼니','담당 매니저','제출 시각']];
   const siteSet=new Set(exportSites);
   adminRecords.filter(r=>siteSet.has(r.site)).sort((a,b)=>a.date.localeCompare(b.date)||a.site.localeCompare(b.site)).forEach(r=>{
-    const t=r.submittedAt?new Date(r.submittedAt).toLocaleString('ko-KR'):'';
+    const t=fmtTime(r.submittedAt);
     detailRows.push([r.date,r.site,r.meal,r.manager||'',t]);
   });
   const ws2=XLSX.utils.aoa_to_sheet(detailRows);ws2['!cols']=[{wch:12},{wch:18},{wch:8},{wch:12},{wch:20}];
