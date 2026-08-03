@@ -173,6 +173,7 @@ td.cell-x{background:var(--bg2);}
       <button class="btn-green" id="btn-excel" onclick="downloadExcel()" disabled>📊 엑셀</button>
     </div>
 
+    <div id="missing-summary" style="display:none;margin-bottom:12px;"></div>
     <div class="grid-wrap" id="grid-wrap"><div class="empty-state">날짜를 선택하고 조회해주세요</div></div>
   </div>
   <div class="section" id="sec-settings">
@@ -205,7 +206,7 @@ td.cell-x{background:var(--bg2);}
   <div class="photo-modal-label" id="photo-modal-label"></div>
 </div>
 <div class="toast" id="toast"></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, collection, query, where, getDocs, doc, setDoc, getDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -316,8 +317,17 @@ async function loadSubmitState(site,date,manager){
   try{
     const q=query(collection(db,'submissions'),where('site','==',site),where('date','==',date),where('manager','==',manager));
     const snap=await getDocs(q);
+    // 서버에서 다시 읽기 전에 '제출완료'로 표시돼 있던 항목만 초기화
+    // (아직 제출하지 않은 로컬 사진/제공안함 선택은 그대로 둠)
+    const cached=mealState[site]&&mealState[site][date];
+    if(cached)Object.keys(cached).forEach(meal=>{
+      if(editingMeals.has(meal))return;
+      const st=cached[meal];
+      if(st.submitted){st.submitted=false;st.photo=null;st.notProvided=false;}
+    });
     snap.forEach(d=>{
       const data=d.data();const st=getState(site,date,data.meal);
+      if(editingMeals.has(data.meal))return;
       if(data.notProvided){st.notProvided=true;st.submitted=true;}
       else{st.submitted=true;st.photo={preview:(data.photoURLs||[])[0],url:(data.photoURLs||[])[0]};}
     });
@@ -473,10 +483,9 @@ window.submitAll=async function(){
   const site=cSite(),date=cDate(),manager=cMgr();
   if(!manager){showToast('매니저를 먼저 선택해주세요',true);return;}
   const toSubmit=currentMeals.filter(m=>{const st=getState(site,date,m);return st.photo&&st.photo.file&&!st.submitted&&!st.notProvided;});
-  const notProvidedMealsCheck=currentMeals.filter(m=>getState(site,date,m).notProvided);
-  if(!toSubmit.length&&!notProvidedMealsCheck.length){showToast('사진을 첨부하거나 제공안함을 선택해주세요',true);return;}
-  document.getElementById('btn-submit-all').disabled=true;
   const notProvidedMeals=currentMeals.filter(m=>getState(site,date,m).notProvided);
+  if(!toSubmit.length&&!notProvidedMeals.length){showToast('사진을 첨부하거나 제공안함을 선택해주세요',true);return;}
+  document.getElementById('btn-submit-all').disabled=true;
   for(const meal of notProvidedMeals){
     try{
       const docId=`${manager}_${site}_${date}_${meal}`.replace(/[^a-zA-Z0-9가-힣_-]/g,'_');
@@ -560,6 +569,7 @@ function startAutoRefresh(){
       const q=query(collection(db,'submissions'),where('date','>=',lastAdminQuery.from),where('date','<=',lastAdminQuery.to));
       const snap=await getDocs(q);adminRecords=[];snap.forEach(d=>adminRecords.push(d.data()));
       renderAdminGrid();
+      document.getElementById('btn-excel').disabled=adminRecords.length===0;
       document.getElementById('refresh-status').textContent=`마지막 업데이트: ${new Date().toLocaleTimeString('ko-KR')}`;
     }catch(e){}
   },30000);
@@ -571,6 +581,7 @@ window.resetAdmin=function(){
   document.getElementById('admin-from').value=todayStr;document.getElementById('admin-to').value=todayStr;
   document.getElementById('admin-manager').value='';
   document.getElementById('grid-wrap').innerHTML='<div class="empty-state">날짜를 선택하고 조회해주세요</div>';
+  document.getElementById('missing-summary').style.display='none';
   document.getElementById('btn-excel').disabled=true;adminRecords=[];lastAdminQuery={from:'',to:''};
 };
 
@@ -624,6 +635,7 @@ function renderAdminGrid(){
     html+='</tr>';
   });
   html+='</tbody></table>';wrap.innerHTML=html;
+  renderMissingSummary(dates,sites,recMap);
 }
 
 function renderMissingSummary(dates,sites,recMap){
@@ -667,13 +679,16 @@ window.downloadExcel=function(){
   const from=lastAdminQuery.from,to=lastAdminQuery.to;
   const dates=getDates(from,to);
   const recMap={};adminRecords.forEach(r=>{recMap[`${r.site}|${r.date}|${r.meal}`]={urls:r.photoURLs||[],notProvided:r.notProvided||false};});
+  const mf=document.getElementById('admin-manager').value;
+  let exportSites=Object.keys(SITE_MEALS);
+  if(mf){const mg=MANAGERS.find(m=>m.name===mf);exportSites=mg?mg.sites:[];}
   const MEALS=['조식','중식','석식','야식'];
   const wb=XLSX.utils.book_new();
   const rows=[];
   const dateRow=['사업장'],mealRow=[''];
   dates.forEach(d=>{MEALS.forEach((m,i)=>{dateRow.push(i===0?d:'');mealRow.push(m);});});
   rows.push(dateRow);rows.push(mealRow);
-  Object.keys(SITE_MEALS).forEach(site=>{
+  exportSites.forEach(site=>{
     const row=[site];
     dates.forEach(d=>{MEALS.forEach(m=>{
       const siteMeals=getMeals(site,d);
@@ -701,7 +716,8 @@ window.downloadExcel=function(){
   ws['!rows']=[{hpt:22},{hpt:18}];
   XLSX.utils.book_append_sheet(wb,ws,'제출 현황');
   const detailRows=[['날짜','사업장','끼니','담당 매니저','제출 시각']];
-  adminRecords.sort((a,b)=>a.date.localeCompare(b.date)||a.site.localeCompare(b.site)).forEach(r=>{
+  const siteSet=new Set(exportSites);
+  adminRecords.filter(r=>siteSet.has(r.site)).sort((a,b)=>a.date.localeCompare(b.date)||a.site.localeCompare(b.site)).forEach(r=>{
     const t=r.submittedAt?new Date(r.submittedAt).toLocaleString('ko-KR'):'';
     detailRows.push([r.date,r.site,r.meal,r.manager||'',t]);
   });
