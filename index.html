@@ -208,7 +208,7 @@ td.cell-x{background:var(--bg2);}
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, collection, query, where, getDocs, doc, setDoc, getDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, query, where, getDocs, doc, setDoc, getDoc, serverTimestamp, writeBatch } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 
 const firebaseConfig={apiKey:"AIzaSyCvFuJZ6hraxohPnvtAbhvBanXzXf8VE-E",authDomain:"bozon-sik.firebaseapp.com",projectId:"bozon-sik",storageBucket:"bozon-sik.firebasestorage.app",messagingSenderId:"350003291657",appId:"1:350003291657:web:9ef438cc880002c11ffad8"};
@@ -222,7 +222,7 @@ const ALL_DAYS=['평일','토요일','일요일'];
 let MANAGERS=[{"name":"강보람","sites":["삼전순약공업"]},{"name":"곽윤정","sites":["동아전장(감곡)"]},{"name":"권은진","sites":["삼정펄프(천안)","KC글라스"]},{"name":"김미선","sites":["한온시스템(아산)"]},{"name":"김미선2","sites":["대덕농협","이구산업","G푸드(지푸드)"]},{"name":"김보라","sites":["디이엔티(오산)"]},{"name":"김신애","sites":["롯데웰푸드(수원)"]},{"name":"김은정","sites":["우진티엠씨","비씨젠(안산)"]},{"name":"김진영","sites":["동인산업"]},{"name":"김하영","sites":["신양","디오토모티브","이피에스 코리아(EPS)"]},{"name":"문민영","sites":["머크"]},{"name":"민숙희","sites":["나래산업"]},{"name":"박수연","sites":["퓨리나","수퍼빈(아이엠펙토리)"]},{"name":"박진경","sites":["퓨어앤텍","한보일렉트"]},{"name":"박진희","sites":["동천"]},{"name":"박혜리","sites":["일렉콤"]},{"name":"방진아","sites":["승우플라텍","엠아이텍","청우코아","파트라","신세대여행사"]},{"name":"방희현","sites":["한석시스템"]},{"name":"서효정","sites":["삼아알미늄"]},{"name":"신영희","sites":["우보테크","피엘에스"]},{"name":"신해인","sites":["오뚜기(논산)","두손","동아전기부품"]},{"name":"양소연","sites":["덕일산업"]},{"name":"양지윤","sites":["지에스아이","한온시스템(둔포)","미소찬"]},{"name":"양한나","sites":["HY(에치와이)"]},{"name":"오차은","sites":["티엔씨","퍼슨"]},{"name":"오희진","sites":["SK가스","진보"]},{"name":"유민지","sites":["메카로"]},{"name":"유정숙","sites":["대한송유관"]},{"name":"윤지연","sites":["그린씨알피","다원체어스"]},{"name":"윤형주","sites":["삼일엘리베이터"]},{"name":"이난희","sites":["신덕산업","한미1공장","한미2공장"]},{"name":"이신혜","sites":["바스노바"]},{"name":"이영주","sites":["오뚜기(평택)"]},{"name":"이윤진","sites":["보성정보통신","성문전자"]},{"name":"이지현","sites":["드림메카텍","유니젠","윤지양행"]},{"name":"이진희","sites":["발렉스","신한전기(엠투엔)","비와이티","대성아이엔지"]},{"name":"이현실","sites":["대코"]},{"name":"임혜민","sites":["삼양화학공업"]},{"name":"장미라","sites":["무봉산수련원"]},{"name":"정연정","sites":["솔레오"]},{"name":"정해린","sites":["세종알로이","한국바이린"]},{"name":"조아라","sites":["진성티이씨 1공장","진성티이씨 2공장"]},{"name":"조지은","sites":["오뚜기(포승)","삼영잉크제조","린데코리아"]},{"name":"조혜진","sites":["동인물산","에스아이","연암","주강로보테크"]},{"name":"조화옥","sites":["쏘나브이씨코리아"]},{"name":"최보연","sites":["한양로보틱스"]},{"name":"최영인","sites":["코오롱인더스트리"]},{"name":"황혜정","sites":["한국가스공사"]}];
 let SITE_MEALS={"그린씨알피":{"평일":["중식","석식","야식"],"토요일":["중식","석식","야식"],"일요일":["중식","석식","야식"]},"대덕농협":{"평일":["중식"],"토요일":["중식"],"일요일":["중식"]},"덕일산업":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"동인물산":{"평일":["조식","중식","석식","야식"],"토요일":[],"일요일":[]},"동천":{"평일":["조식","중식","석식"],"토요일":[],"일요일":[]},"드림메카텍":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"롯데웰푸드(수원)":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"메카로":{"평일":["조식","중식","석식"],"토요일":[],"일요일":[]},"발렉스":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"보성정보통신":{"평일":["중식","석식","야식"],"토요일":["중식","석식","야식"],"일요일":["중식","석식","야식"]},"삼양화학공업":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"삼일엘리베이터":{"평일":["조식","중식","석식"],"토요일":[],"일요일":[]},"삼전순약공업":{"평일":["중식"],"토요일":[],"일요일":[]},"삼정펄프(천안)":{"평일":["중식","석식"],"토요일":["중식","석식"],"일요일":["중식","석식"]},"성문전자":{"평일":["중식","석식","야식"],"토요일":[],"일요일":[]},"세종알로이":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"솔레오":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"승우플라텍":{"평일":["조식","중식","석식","야식"],"토요일":[],"일요일":[]},"신덕산업":{"평일":["조식","중식","석식"],"토요일":[],"일요일":[]},"신양":{"평일":["중식","석식","야식"],"토요일":[],"일요일":[]},"신한전기(엠투엔)":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"에스아이":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"엠아이텍":{"평일":["중식"],"토요일":[],"일요일":[]},"연암":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"오뚜기(평택)":{"평일":["조식","중식"],"토요일":[],"일요일":[]},"오뚜기(포승)":{"평일":["조식","중식","석식","야식"],"토요일":[],"일요일":[]},"오뚜기(논산)":{"평일":["중식"],"토요일":[],"일요일":[]},"유니젠":{"평일":["중식","석식"],"토요일":["중식"],"일요일":[]},"윤지양행":{"평일":["중식","석식"],"토요일":["중식"],"일요일":[]},"일렉콤":{"평일":["조식","중식","석식"],"토요일":[],"일요일":[]},"지에스아이":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":[]},"청우코아":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"코오롱인더스트리":{"평일":["중식","석식"],"토요일":[],"일요일":["중식"]},"티엔씨":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"퓨어앤텍":{"평일":["중식","석식"],"토요일":["중식","석식"],"일요일":["중식","석식"]},"한보일렉트":{"평일":["중식","석식"],"토요일":["중식","석식"],"일요일":["중식","석식"]},"한양로보틱스":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"KC글라스":{"평일":["중식","석식","야식"],"토요일":["중식","석식","야식"],"일요일":["중식","석식","야식"]},"SK가스":{"평일":["중식","석식"],"토요일":["중식","석식"],"일요일":["중식","석식"]},"동인산업":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"한석시스템":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"퍼슨":{"평일":["중식"],"토요일":["중식"],"일요일":["중식"]},"다원체어스":{"평일":["중식"],"토요일":[],"일요일":[]},"쏘나브이씨코리아":{"평일":["조식","중식"],"토요일":[],"일요일":[]},"우진티엠씨":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"우보테크":{"평일":["조식","중식","석식"],"토요일":[],"일요일":[]},"파트라":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"한온시스템(아산)":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"한온시스템(둔포)":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"HY(에치와이)":{"평일":["조식","중식","석식"],"토요일":["조식","중식","석식"],"일요일":["조식","중식","석식"]},"나래산업":{"평일":["중식","석식","야식"],"토요일":["중식"],"일요일":[]},"한미1공장":{"평일":["조식","중식","석식","야식"],"토요일":[],"일요일":[]},"한미2공장":{"평일":["조식","중식","석식","야식"],"토요일":[],"일요일":[]},"퓨리나":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"한국바이린":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식"]},"디이엔티(오산)":{"평일":["조식","중식","석식"],"토요일":[],"일요일":[]},"수퍼빈(아이엠펙토리)":{"평일":["중식"],"토요일":[],"일요일":[]},"한국가스공사":{"평일":["중식","석식"],"토요일":["중식","석식"],"일요일":["중식","석식"]},"비씨젠(안산)":{"평일":["조식","중식","석식"],"토요일":[],"일요일":[]},"삼영잉크제조":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"디오토모티브":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"주강로보테크":{"평일":["조식","중식","석식"],"토요일":[],"일요일":[]},"피엘에스":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"이구산업":{"평일":["조식","중식","석식","야식"],"토요일":["조식","중식","석식","야식"],"일요일":["조식","중식","석식","야식"]},"진보":{"평일":["조식","중식","석식"],"토요일":[],"일요일":[]},"이피에스 코리아(EPS)":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"두손":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"G푸드(지푸드)":{"평일":["중식"],"토요일":[],"일요일":[]},"머크":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"동아전기부품":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"바스노바":{"평일":["중식"],"토요일":[],"일요일":[]},"대한송유관":{"평일":["중식"],"토요일":[],"일요일":[]},"미소찬":{"평일":["중식"],"토요일":["중식"],"일요일":["중식"]},"비와이티":{"평일":["중식","석식"],"토요일":["중식","석식"],"일요일":["중식","석식"]},"대성아이엔지":{"평일":["중식","석식","야식"],"토요일":["중식","석식","야식"],"일요일":["중식","석식","야식"]},"무봉산수련원":{"평일":["조식","중식","석식"],"토요일":["조식","중식","석식"],"일요일":["조식","중식","석식"]},"진성티이씨 1공장":{"평일":["조식","중식","석식"],"토요일":["중식"],"일요일":[]},"진성티이씨 2공장":{"평일":["중식","석식"],"토요일":["중식"],"일요일":[]},"대코":{"평일":["중식","석식"],"토요일":[],"일요일":[]},"동아전장(감곡)":{"평일":["중식"],"토요일":["중식"],"일요일":[]},"린데코리아":{"평일":["중식"],"토요일":[],"일요일":[]},"신세대여행사":{"평일":["조식","중식"],"토요일":[],"일요일":[]},"삼아알미늄":{"평일":["중식","석식","야식"],"토요일":["중식","석식","야식"],"일요일":["중식","석식","야식"]}};
 
-const ALL_SITES=Object.keys(SITE_MEALS);
+// SITE_MEALS는 loadConfig()로 교체되므로 사업장 목록은 그때그때 읽어야 함
 let mealState={},editingMeals=new Set(),openRows=new Set(),currentMeals=[];
 let adminRecords=[];
 let autoRefreshTimer=null,lastAdminQuery={from:'',to:''};
@@ -621,7 +621,7 @@ function renderAdminGrid(){
   const mf=document.getElementById('admin-manager').value,wrap=document.getElementById('grid-wrap');
   const dates=getDates(from,to);
   const cols=[];dates.forEach(d=>['조식','중식','석식','야식'].forEach(m=>cols.push({date:d,meal:m})));
-  let sites=ALL_SITES;
+  let sites=Object.keys(SITE_MEALS);
   if(mf){const mg=MANAGERS.find(m=>m.name===mf);sites=mg?mg.sites:[];}
   const recMap={};adminRecords.forEach(r=>{recMap[`${r.site}|${r.date}|${r.meal}`]={urls:r.photoURLs||[],notProvided:r.notProvided||false};});
   let html='<table class="admin-grid"><thead><tr><th class="th-site" rowspan="2">사업장</th>';
@@ -744,6 +744,12 @@ function renderSiteSettings(){
         <svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
       <div class="site-card-panel">
+        <div class="panel-section-label">사업장 이름 변경</div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="rename-${esc(site)}" placeholder="${site}" style="flex:1;height:44px;font-size:15px;" />
+          <button onclick="renameSite('${site}')" style="padding:0 16px;height:44px;font-size:13px;font-weight:500;background:var(--bg3);border:1px solid var(--border);border-radius:10px;cursor:pointer;color:var(--text1);white-space:nowrap;font-family:inherit;">변경</button>
+        </div>
+        <div style="font-size:11px;color:var(--text4);margin-top:5px;">과거 제출 기록도 함께 새 이름으로 옮겨집니다</div>
         <div class="panel-section-label">담당 매니저</div>
         <select id="mgr-sel-${esc(site)}" style="height:44px;font-size:15px;">
           ${[...MANAGERS].sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(m=>`<option value="${m.name}"${m.name===managerName?' selected':''}>${m.name}</option>`).join('')}
@@ -795,6 +801,62 @@ window.saveSiteSettings=async function(site){
     SITE_MEALS[site]=newMeals;
     await saveConfig();hideLoading();showToast(`${site} 설정 저장 완료!`);refreshDropdowns();renderSiteSettings();
   }catch(e){hideLoading();showToast('저장 실패: '+e.message,true);}
+};
+
+window.renameSite=async function(oldName){
+  const input=document.getElementById('rename-'+esc(oldName));
+  const newName=input.value.trim();
+  if(!newName){showToast('새 이름을 입력해주세요',true);return;}
+  if(newName===oldName){showToast('이름이 같아요',true);return;}
+  if(SITE_MEALS[newName]){showToast('이미 존재하는 사업장 이름이에요',true);return;}
+  if(/[\/\.\[\]#$]/.test(newName)){showToast('이름에 / . [ ] # $ 는 쓸 수 없어요',true);return;}
+
+  showLoading('기존 기록 확인 중...');
+  let docs=[];
+  try{
+    const snap=await getDocs(query(collection(db,'submissions'),where('site','==',oldName)));
+    snap.forEach(d=>docs.push({id:d.id,data:d.data()}));
+  }catch(e){hideLoading();showToast('기록 조회 실패: '+e.message,true);return;}
+  hideLoading();
+
+  if(!confirm(`사업장 이름을 변경할까요?\n\n기존: ${oldName}\n변경: ${newName}\n\n함께 옮길 제출 기록: ${docs.length}건\n\n되돌리기 어려우니 확인 후 진행해주세요.`))return;
+
+  showLoading(docs.length?`기록 이전 중... (0/${docs.length})`:'변경 중...');
+  try{
+    // 1) 제출 문서를 새 이름으로 복사 (배치당 500건 제한 → 200건씩 나눠 처리)
+    const CHUNK=200;
+    let moved=0;
+    for(let i=0;i<docs.length;i+=CHUNK){
+      const batch=writeBatch(db);
+      docs.slice(i,i+CHUNK).forEach(({id,data})=>{
+        const newId=`${data.manager}_${newName}_${data.date}_${data.meal}`.replace(/[^a-zA-Z0-9가-힣_-]/g,'_');
+        batch.set(doc(db,'submissions',newId),{...data,site:newName,renamedFrom:oldName});
+        // 옛 문서는 지우지 않고 플래그만 — 복구 여지를 남김
+        batch.set(doc(db,'submissions',id),{deleted:true,renamedTo:newName,deletedAt:serverTimestamp()},{merge:true});
+      });
+      await batch.commit();
+      moved+=Math.min(CHUNK,docs.length-i);
+      document.getElementById('loading-text').textContent=`기록 이전 중... (${moved}/${docs.length})`;
+    }
+
+    // 2) 설정 갱신 — 기존 순서를 유지하며 키만 교체
+    document.getElementById('loading-text').textContent='설정 저장 중...';
+    const rebuilt={};
+    Object.keys(SITE_MEALS).forEach(k=>{rebuilt[k===oldName?newName:k]=SITE_MEALS[k];});
+    SITE_MEALS=rebuilt;
+    MANAGERS.forEach(m=>{m.sites=m.sites.map(s=>s===oldName?newName:s);});
+    await saveConfig();
+
+    hideLoading();
+    showToast(`"${newName}"(으)로 변경 완료 · 기록 ${docs.length}건 이전`);
+    refreshDropdowns();renderSiteSettings();
+  }catch(e){
+    hideLoading();
+    showToast('변경 실패: '+e.message,true);
+    console.error('이름 변경 실패',e);
+    // 설정이 저장되지 않았을 수 있으므로 서버 상태를 다시 읽어 화면을 맞춤
+    await loadConfig();refreshDropdowns();renderSiteSettings();
+  }
 };
 
 window.deleteSite=async function(site){
