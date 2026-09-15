@@ -69,21 +69,34 @@ select:disabled{opacity:0.4;cursor:not-allowed;background:var(--bg3);}
 .auto-refresh-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:13px;color:var(--text2);}
 .refresh-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
-.grid-wrap{overflow-x:auto;border:1px solid var(--border2);border-radius:12px;background:var(--bg2);}
+.view-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+.seg{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;flex-shrink:0;}
+.seg-btn{padding:0 14px;height:36px;font-size:13px;font-weight:500;background:var(--bg2);color:var(--text2);border:none;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.seg-btn.active{background:var(--text1);color:var(--bg2);}
+.meal-filter{display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
+.filter-label{font-size:12px;color:var(--text3);margin-right:2px;}
+.filter-chip{padding:0 12px;height:36px;line-height:34px;font-size:13px;border:1px solid var(--border);border-radius:99px;cursor:pointer;background:var(--bg2);color:var(--text4);user-select:none;}
+.filter-chip.on{border-color:var(--green);background:var(--green-light);color:var(--green-dark);font-weight:500;}
+.grid-wrap{overflow:auto;border:1px solid var(--border2);border-radius:12px;background:var(--bg2);max-height:min(70vh,640px);-webkit-overflow-scrolling:touch;}
+.grid-wrap:has(.empty-state){max-height:none;}
 table.admin-grid{border-collapse:collapse;font-size:12px;min-width:100%;}
 .admin-grid th,.admin-grid td{border-right:0.5px solid var(--border2);border-bottom:0.5px solid var(--border2);text-align:center;white-space:nowrap;}
 .admin-grid th:last-child,.admin-grid td:last-child{border-right:none;}
 .admin-grid tr:last-child td{border-bottom:none;}
 .admin-grid .date-sep{border-left:2px solid var(--border);}
-th.th-date{padding:6px 8px;font-size:11px;font-weight:500;color:var(--text2);background:var(--bg3);}
-th.th-meal{padding:5px 6px;font-size:10px;color:var(--text3);background:var(--bg3);min-width:44px;}
-th.th-site{padding:8px 12px;font-size:12px;font-weight:500;color:var(--text1);background:var(--bg3);text-align:left;position:sticky;left:0;z-index:2;min-width:110px;}
+th.th-date{padding:6px 8px;font-size:11px;font-weight:500;color:var(--text2);background:var(--bg3);position:sticky;top:0;z-index:3;}
+th.th-meal{padding:5px 6px;font-size:10px;color:var(--text3);background:var(--bg3);min-width:44px;position:sticky;top:27px;z-index:3;}
+th.th-site{padding:8px 12px;font-size:12px;font-weight:500;color:var(--text1);background:var(--bg3);text-align:left;position:sticky;left:0;top:0;z-index:5;min-width:110px;}
 td.td-site{padding:0 12px;height:32px;font-size:12px;color:var(--text1);text-align:left;background:var(--bg2);position:sticky;left:0;z-index:1;border-right:1px solid var(--border2);}
 td.cell{height:32px;min-width:44px;}
 td.cell-gray{background:var(--bg3);}
 td.cell-o{background:#5DCAA5;cursor:pointer;}
 td.cell-o:hover{background:var(--green);}
 td.cell-x{background:var(--bg2);}
+td.cell-partial{background:#FFE9B8;}
+.dark td.cell-partial{background:#5C4A1F;}
+td.cell-partial .cell-symbol{font-size:10px;color:#7A5A00;font-weight:600;}
+.dark td.cell-partial .cell-symbol{color:#FFD97A;}
 .cell-symbol{font-size:12px;font-weight:600;}
 .cell-o .cell-symbol{color:#085041;}
 .cell-x .cell-symbol{color:var(--text4);}
@@ -171,6 +184,20 @@ td.cell-x{background:var(--bg2);}
       <button class="btn-secondary" onclick="loadAdminData()">조회</button>
       <button class="btn-secondary" onclick="resetAdmin()">초기화</button>
       <button class="btn-green" id="btn-excel" onclick="downloadExcel()" disabled>📊 엑셀</button>
+    </div>
+
+    <div class="view-controls">
+      <div class="seg" id="seg-view">
+        <button class="seg-btn active" id="seg-meal" onclick="setViewMode('meal')">끼니별</button>
+        <button class="seg-btn" id="seg-day" onclick="setViewMode('day')">날짜 요약</button>
+      </div>
+      <div class="meal-filter" id="meal-filter">
+        <span class="filter-label">끼니</span>
+        <div class="filter-chip on" data-meal="조식" onclick="toggleMealFilter(this)">조식</div>
+        <div class="filter-chip on" data-meal="중식" onclick="toggleMealFilter(this)">중식</div>
+        <div class="filter-chip on" data-meal="석식" onclick="toggleMealFilter(this)">석식</div>
+        <div class="filter-chip on" data-meal="야식" onclick="toggleMealFilter(this)">야식</div>
+      </div>
     </div>
 
     <div class="grid-wrap" id="grid-wrap"><div class="empty-state">날짜를 선택하고 조회해주세요</div></div>
@@ -616,23 +643,46 @@ window.loadAdminData=async function(){
 
 function getDates(from,to){const d=[],c=new Date(from),e=new Date(to);while(c<=e){d.push(c.toISOString().split('T')[0]);c.setDate(c.getDate()+1);}return d;}
 
+let viewMode='meal';
+let mealFilter=new Set(['조식','중식','석식','야식']);
+
+window.setViewMode=function(mode){
+  viewMode=mode;
+  document.getElementById('seg-meal').classList.toggle('active',mode==='meal');
+  document.getElementById('seg-day').classList.toggle('active',mode==='day');
+  // 날짜 요약에서는 끼니 필터가 의미 없음
+  document.getElementById('meal-filter').style.display=mode==='day'?'none':'flex';
+  renderAdminGrid();
+};
+window.toggleMealFilter=function(el){
+  const meal=el.dataset.meal;
+  if(mealFilter.has(meal)&&mealFilter.size===1){showToast('최소 1개는 선택해야 해요',true);return;}
+  if(mealFilter.has(meal)){mealFilter.delete(meal);el.classList.remove('on');}
+  else{mealFilter.add(meal);el.classList.add('on');}
+  renderAdminGrid();
+};
+
 function renderAdminGrid(){
   const from=lastAdminQuery.from,to=lastAdminQuery.to;if(!from||!to)return;
   const mf=document.getElementById('admin-manager').value,wrap=document.getElementById('grid-wrap');
   const dates=getDates(from,to);
-  const cols=[];dates.forEach(d=>['조식','중식','석식','야식'].forEach(m=>cols.push({date:d,meal:m})));
   let sites=Object.keys(SITE_MEALS);
   if(mf){const mg=MANAGERS.find(m=>m.name===mf);sites=mg?mg.sites:[];}
   const recMap={};adminRecords.forEach(r=>{recMap[`${r.site}|${r.date}|${r.meal}`]={urls:r.photoURLs||[],notProvided:r.notProvided||false};});
+
+  if(viewMode==='day'){renderDayGrid(dates,sites,recMap,wrap);return;}
+
+  const MEALS=['조식','중식','석식','야식'].filter(m=>mealFilter.has(m));
+  const cols=[];dates.forEach(d=>MEALS.forEach(m=>cols.push({date:d,meal:m})));
   let html='<table class="admin-grid"><thead><tr><th class="th-site" rowspan="2">사업장</th>';
-  dates.forEach((d,di)=>html+=`<th class="th-date${di>0?' date-sep':''}" colspan="4">${d}</th>`);
+  dates.forEach((d,di)=>html+=`<th class="th-date${di>0?' date-sep':''}" colspan="${MEALS.length}">${fmtDateHead(d)}</th>`);
   html+='</tr><tr>';
-  dates.forEach((d,di)=>['조식','중식','석식','야식'].forEach((m,mi)=>html+=`<th class="th-meal${mi===0&&di>0?' date-sep':''}">${m}</th>`));
+  dates.forEach((d,di)=>MEALS.forEach((m,mi)=>html+=`<th class="th-meal${mi===0&&di>0?' date-sep':''}">${m}</th>`));
   html+='</tr></thead><tbody>';
   sites.forEach(site=>{
     html+=`<tr><td class="td-site">${site}</td>`;
     cols.forEach((col,ci)=>{
-      const sep=['조식','중식','석식','야식'].indexOf(col.meal)===0&&ci>0?' date-sep':'';
+      const sep=MEALS.indexOf(col.meal)===0&&ci>0?' date-sep':'';
       const meals=getMeals(site,col.date);
       if(!meals.includes(col.meal)){html+=`<td class="cell cell-gray${sep}"></td>`;return;}
       const key=`${site}|${col.date}|${col.meal}`;
@@ -649,6 +699,39 @@ function renderAdminGrid(){
   });
   html+='</tbody></table>';wrap.innerHTML=html;
 }
+
+// 날짜 요약 — 하루를 한 칸으로 압축. 그날 제출해야 할 끼니를 다 했는지만 표시
+function renderDayGrid(dates,sites,recMap,wrap){
+  let html='<table class="admin-grid"><thead><tr><th class="th-site">사업장</th>';
+  dates.forEach(d=>html+=`<th class="th-meal" style="min-width:52px;top:0;">${fmtDayHead(d)}</th>`);
+  html+='</tr></thead><tbody>';
+  sites.forEach(site=>{
+    html+=`<tr><td class="td-site">${site}</td>`;
+    dates.forEach(date=>{
+      const meals=getMeals(site,date);
+      if(!meals.length){html+='<td class="cell cell-gray"></td>';return;}
+      let done=0,missing=[];
+      meals.forEach(m=>{
+        const rec=recMap[`${site}|${date}|${m}`];
+        if(rec&&(rec.urls.length||rec.notProvided))done++;
+        else missing.push(m);
+      });
+      const tip=`${site} · ${date}`;
+      if(done===meals.length){
+        html+=`<td class="cell cell-o" title="${tip} — 전체 완료"><span class="cell-symbol">O</span></td>`;
+      } else if(done===0){
+        html+=`<td class="cell cell-x" title="${tip} — 전체 미제출 (${missing.join(',')})"><span class="cell-symbol">X</span></td>`;
+      } else {
+        html+=`<td class="cell cell-partial" title="${tip} — ${done}/${meals.length} 제출 (미제출: ${missing.join(',')})"><span class="cell-symbol">${done}/${meals.length}</span></td>`;
+      }
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>';wrap.innerHTML=html;
+}
+
+function fmtDateHead(d){const D=new Date(d+'T00:00:00');return `${d.slice(5)} (${'일월화수목금토'[D.getDay()]})`;}
+function fmtDayHead(d){const D=new Date(d+'T00:00:00');return `${Number(d.slice(5,7))}/${Number(d.slice(8))}<br><span style="font-size:9px;color:var(--text4);">${'일월화수목금토'[D.getDay()]}</span>`;}
 
 window.downloadExcel=function(){
   if(!adminRecords.length){showToast('먼저 조회해주세요',true);return;}
