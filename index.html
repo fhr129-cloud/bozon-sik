@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>온정 F&B 보존식 제출</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1D9E75">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="보존식">
 <style>
 :root{--bg:#f5f5f3;--bg2:#fff;--bg3:#fafafa;--border:#e0e0e0;--border2:#e8e8e8;--text1:#1a1a1a;--text2:#666;--text3:#999;--text4:#bbb;--green:#1D9E75;--green-light:#E1F5EE;--green-dark:#0F6E56;--red:#e24b4a;--shadow:rgba(0,0,0,0.08);}
 .dark #logo-img{filter:invert(1);}
@@ -12,6 +19,13 @@
 body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans KR',sans-serif;background:var(--bg);min-height:100vh;color:var(--text1);}
 .app{max-width:720px;margin:0 auto;padding:1rem;padding-bottom:3rem;}
 .header{padding:1.25rem 0 0.5rem;margin-bottom:0.5rem;display:flex;justify-content:space-between;align-items:center;}
+.btn-install{padding:0 12px;height:36px;font-size:13px;font-weight:500;border:1px solid var(--green);border-radius:99px;background:var(--green-light);color:var(--green-dark);cursor:pointer;font-family:inherit;white-space:nowrap;}
+.ios-sheet{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1001;align-items:flex-end;justify-content:center;}
+.ios-sheet.open{display:flex;}
+.ios-sheet-inner{background:var(--bg2);border-radius:18px 18px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));width:100%;max-width:480px;}
+.ios-step{display:flex;gap:12px;align-items:flex-start;margin-bottom:16px;}
+.ios-num{width:24px;height:24px;border-radius:50%;background:var(--green);color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ios-step-text{font-size:14px;color:var(--text1);line-height:1.5;}
 .btn-dark{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--bg2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
 .tab-bar{display:flex;border-bottom:1px solid var(--border);margin-bottom:1.5rem;overflow-x:auto;scrollbar-width:none;}
 .tab-bar::-webkit-scrollbar{display:none;}
@@ -144,7 +158,10 @@ td.cell-partial .cell-symbol{font-size:10px;color:#7A5A00;font-weight:600;}
     <div class="header-left">
       <img src="logo.jpg" id="logo-img" style="height:44px;object-fit:contain;display:block;" alt="온정 F&B" />
     </div>
-    <button class="btn-dark" onclick="toggleDark()" id="dark-btn">🌙</button>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn-install" id="btn-install" onclick="handleInstall()" style="display:none;">홈 화면에 추가</button>
+      <button class="btn-dark" onclick="toggleDark()" id="dark-btn">🌙</button>
+    </div>
   </div>
   <div class="tab-bar">
     <button class="tab active" onclick="switchTab('submit')">보존식 제출</button>
@@ -231,7 +248,70 @@ td.cell-partial .cell-symbol{font-size:10px;color:#7A5A00;font-weight:600;}
   <img id="photo-modal-img" src="" />
   <div class="photo-modal-label" id="photo-modal-label"></div>
 </div>
+<div class="ios-sheet" id="ios-sheet" onclick="if(event.target===this)closeIosSheet()">
+  <div class="ios-sheet-inner">
+    <div style="font-size:16px;font-weight:600;color:var(--text1);margin-bottom:4px;">홈 화면에 추가하기</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:18px;">아이폰은 아래 순서로 직접 추가해주세요.</div>
+    <div class="ios-step"><div class="ios-num">1</div><div class="ios-step-text">화면 아래쪽 <b>공유 버튼</b>을 누르세요<br><span style="font-size:12px;color:var(--text3);">네모에 위쪽 화살표가 있는 모양이에요</span></div></div>
+    <div class="ios-step"><div class="ios-num">2</div><div class="ios-step-text">메뉴를 아래로 내려서 <b>"홈 화면에 추가"</b>를 누르세요</div></div>
+    <div class="ios-step"><div class="ios-num">3</div><div class="ios-step-text">오른쪽 위 <b>"추가"</b>를 누르면 끝이에요</div></div>
+    <div style="font-size:12px;color:var(--text3);background:var(--bg3);border-radius:10px;padding:10px 12px;margin-bottom:16px;">※ 사파리(Safari)에서만 가능해요. 크롬으로 보고 계시면 사파리로 열어주세요.</div>
+    <button onclick="closeIosSheet()" style="width:100%;padding:14px;font-size:15px;font-weight:600;background:var(--text1);color:var(--bg2);border:none;border-radius:12px;cursor:pointer;font-family:inherit;">확인</button>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
+<script>
+// ── 홈 화면 추가(PWA) ──
+(function(){
+  var deferredPrompt=null;
+  var btn=document.getElementById('btn-install');
+
+  function isStandalone(){
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;
+  }
+  function isIOS(){
+    return /iphone|ipad|ipod/i.test(navigator.userAgent)
+        || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1); // 아이패드
+  }
+
+  // 이미 설치해서 실행 중이면 버튼을 숨김
+  if(isStandalone()){btn.style.display='none';}
+  else if(isIOS()){
+    // 아이폰은 설치 API가 없어 안내만 가능
+    btn.style.display='block';
+  }
+
+  // 안드로이드/크롬 — 설치 가능해지면 이벤트가 옴
+  window.addEventListener('beforeinstallprompt',function(e){
+    e.preventDefault();
+    deferredPrompt=e;
+    if(!isStandalone())btn.style.display='block';
+  });
+
+  window.addEventListener('appinstalled',function(){
+    deferredPrompt=null;
+    btn.style.display='none';
+  });
+
+  window.handleInstall=function(){
+    if(deferredPrompt){
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function(){deferredPrompt=null;btn.style.display='none';});
+      return;
+    }
+    // 아이폰이거나 설치 이벤트를 못 받은 경우 → 수동 안내
+    document.getElementById('ios-sheet').classList.add('open');
+  };
+  window.closeIosSheet=function(){document.getElementById('ios-sheet').classList.remove('open');};
+})();
+
+// ── 서비스워커 등록 ──
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').catch(function(e){console.log('SW 등록 실패',e);});
+  });
+}
+</script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
