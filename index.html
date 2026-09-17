@@ -121,6 +121,22 @@ td.cell-partial .cell-symbol{font-size:10px;color:#7A5A00;font-weight:600;}
 .preview-label{font-size:11px;color:var(--text2);margin-bottom:6px;text-align:center;font-weight:500;}
 .settings-title{font-size:15px;font-weight:600;color:var(--text1);margin-bottom:4px;}
 .settings-sub{font-size:13px;color:var(--text2);margin-bottom:1.25rem;}
+.settings-search{position:relative;margin-bottom:8px;}
+.settings-search input{padding-right:40px;}
+.search-clear{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:30px;height:30px;border:none;background:none;color:var(--text3);font-size:14px;cursor:pointer;border-radius:50%;}
+.search-clear:hover{background:var(--bg3);}
+.search-meta{font-size:12px;color:var(--text3);margin-bottom:12px;min-height:16px;}
+.wd-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg3);margin-bottom:10px;cursor:pointer;}
+.wd-toggle-text{font-size:13px;color:var(--text1);font-weight:500;}
+.wd-toggle-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.switch{width:44px;height:26px;border-radius:99px;background:var(--border);position:relative;flex-shrink:0;transition:background 0.2s;}
+.switch.on{background:var(--green);}
+.switch::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform 0.2s;}
+.switch.on::after{transform:translateX(18px);}
+.wd-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.wd-name{font-size:12px;color:var(--text2);width:36px;flex-shrink:0;font-weight:500;}
+.wd-chips{display:flex;gap:4px;flex-wrap:wrap;}
+.wd-chips .meal-chip{padding:5px 10px;font-size:12px;}
 .site-card{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;margin-bottom:10px;overflow:hidden;}
 .site-card-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;min-height:60px;}
 .site-card-header:hover{background:var(--bg3);}
@@ -237,6 +253,11 @@ td.cell-partial .cell-symbol{font-size:10px;color:#7A5A00;font-weight:600;}
         <button onclick="lockSettings()" style="font-size:12px;color:var(--text3);background:none;border:none;cursor:pointer;">잠금</button>
       </div>
       <div class="settings-sub">담당 매니저와 요일별 끼니를 변경할 수 있어요.</div>
+      <div class="settings-search">
+        <input type="text" id="site-search" placeholder="사업장 또는 매니저 이름 검색" oninput="filterSiteSettings()" autocomplete="off" />
+        <button class="search-clear" id="search-clear" onclick="clearSiteSearch()" style="display:none;">✕</button>
+      </div>
+      <div class="search-meta" id="search-meta"></div>
       <div id="site-settings-list"><div class="empty-state">불러오는 중...</div></div>
     </div>
   </div>
@@ -344,8 +365,28 @@ function applyDark(){document.body.classList.toggle('dark',isDark);document.getE
 applyDark();
 window.toggleDark=()=>{isDark=!isDark;localStorage.setItem('dark',isDark?'1':'0');applyDark();};
 
+const WEEKDAY_NAMES=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+const WEEKDAYS=['월요일','화요일','수요일','목요일','금요일']; // 평일 예외 지정 대상
+
 function getDayType(d){const day=new Date(d).getDay();return day===6?'토요일':day===0?'일요일':'평일';}
-function getMeals(site,date){return(SITE_MEALS[site]&&SITE_MEALS[site][getDayType(date)])||[];}
+
+// 끼니 조회 우선순위: 개별 요일 설정 > 평일/토/일 기본 설정
+// 평일 예외를 쓰지 않는 사업장은 기존 구조 그대로 동작함
+function getMeals(site,date){
+  const cfg=SITE_MEALS[site];
+  if(!cfg)return [];
+  const dow=new Date(date).getDay();
+  if(dow>=1&&dow<=5){
+    const specific=cfg[WEEKDAY_NAMES[dow]];
+    if(Array.isArray(specific))return specific;
+  }
+  return cfg[getDayType(date)]||[];
+}
+// 해당 사업장이 평일 예외를 쓰고 있는지
+function hasWeekdayOverride(site){
+  const cfg=SITE_MEALS[site]||{};
+  return WEEKDAYS.some(d=>Array.isArray(cfg[d]));
+}
 function getManagerForSite(site){return MANAGERS.find(m=>m.sites.includes(site));}
 function getState(site,date,meal){
   if(!mealState[site])mealState[site]={};
@@ -897,13 +938,66 @@ window.checkSettingsPw=function(){
 };
 window.lockSettings=function(){document.getElementById('settings-lock').style.display='block';document.getElementById('settings-content').style.display='none';document.getElementById('settings-pw-input').value='';};
 
+let siteSearchTerm='';
+
+window.clearSiteSearch=function(){
+  document.getElementById('site-search').value='';
+  siteSearchTerm='';
+  renderSiteSettings();
+};
+window.filterSiteSettings=function(){
+  siteSearchTerm=document.getElementById('site-search').value.trim().toLowerCase();
+  document.getElementById('search-clear').style.display=siteSearchTerm?'block':'none';
+  renderSiteSettings();
+};
+
+function matchesSearch(site){
+  if(!siteSearchTerm)return true;
+  const mgr=getManagerForSite(site);
+  return site.toLowerCase().includes(siteSearchTerm)
+      || (mgr&&mgr.name.toLowerCase().includes(siteSearchTerm));
+}
+
+function buildWeekdaySection(site,meals){
+  const overrideOn=hasWeekdayOverride(site);
+  const rows=WEEKDAYS.map(day=>{
+    // 예외가 없으면 평일 설정을 그대로 보여줌
+    const cur=Array.isArray(meals[day])?meals[day]:(meals['평일']||[]);
+    return `<div class="wd-row">
+      <div class="wd-name">${day[0]}</div>
+      <div class="wd-chips" id="chips-${esc(site)}-${esc(day)}">
+        ${ALL_MEAL_OPTIONS.map(m=>`<div class="meal-chip${cur.includes(m)?' on':''}" onclick="toggleMealChip(this)">${m}</div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="wd-toggle" onclick="toggleWeekdayMode('${site}')">
+      <div>
+        <div class="wd-toggle-text">요일별 상세 설정</div>
+        <div class="wd-toggle-sub">평일 중 요일마다 끼니가 다른 경우에만 켜세요</div>
+      </div>
+      <div class="switch${overrideOn?' on':''}" id="wdsw-${esc(site)}"></div>
+    </div>
+    <div id="wdbox-${esc(site)}" style="display:${overrideOn?'block':'none'};margin-bottom:12px;">${rows}</div>`;
+}
+
 function renderSiteSettings(){
   const list=document.getElementById('site-settings-list');
-  const sitesHtml=Object.keys(SITE_MEALS).map(site=>{
+  const meta=document.getElementById('search-meta');
+  const allSites=Object.keys(SITE_MEALS);
+  const shown=allSites.filter(matchesSearch);
+
+  if(meta){
+    meta.textContent=siteSearchTerm
+      ? `${shown.length}개 사업장 (전체 ${allSites.length}개)`
+      : `전체 ${allSites.length}개 사업장`;
+  }
+
+  const sitesHtml=shown.map(site=>{
     const manager=getManagerForSite(site);const managerName=manager?.name||'미지정';const meals=SITE_MEALS[site];
+    const wdBadge=hasWeekdayOverride(site)?` · <span style="color:var(--green-dark);">요일별 설정</span>`:'';
     return `<div class="site-card" id="scard-${esc(site)}">
       <div class="site-card-header" onclick="toggleSiteCard('${site}')">
-        <div><div class="site-card-name">${site}</div><div class="site-card-info">담당: ${managerName}</div></div>
+        <div><div class="site-card-name">${site}</div><div class="site-card-info">담당: ${managerName}${wdBadge}</div></div>
         <svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
       <div class="site-card-panel">
@@ -923,11 +1017,12 @@ function renderSiteSettings(){
         </div>
         ${ALL_DAYS.map(day=>`
           <div class="day-row" style="margin-bottom:12px;">
-            <div class="panel-section-label">${day}</div>
+            <div class="panel-section-label">${day}${day==='평일'?' <span style="font-weight:400;color:var(--text4);">(월~금 공통)</span>':''}</div>
             <div class="meal-chips" id="chips-${esc(site)}-${esc(day)}">
-              ${ALL_MEAL_OPTIONS.map(meal=>{const on=(meals[day]||[]).includes(meal);return `<div class="meal-chip${on?' on':''}" onclick="toggleMealChip(this,'${site}','${day}','${meal}')">${meal}</div>`;}).join('')}
+              ${ALL_MEAL_OPTIONS.map(meal=>{const on=(meals[day]||[]).includes(meal);return `<div class="meal-chip${on?' on':''}" onclick="toggleMealChip(this)">${meal}</div>`;}).join('')}
             </div>
           </div>`).join('')}
+        ${buildWeekdaySection(site,meals)}
         <div style="display:flex;gap:8px;margin-top:16px;">
           <button class="btn-save" style="flex:1;" onclick="saveSiteSettings('${site}')">저장</button>
           <button onclick="deleteSite('${site}')" style="padding:0 14px;height:44px;font-size:13px;font-weight:500;background:none;border:1px solid var(--red);border-radius:10px;cursor:pointer;color:var(--red);white-space:nowrap;">삭제</button>
@@ -935,7 +1030,9 @@ function renderSiteSettings(){
       </div>
     </div>`;
   }).join('');
-  const addHtml=`<div style="background:var(--bg2);border:1.5px dashed var(--border);border-radius:12px;padding:16px;margin-bottom:12px;">
+
+  // 검색 중에는 '새 사업장 추가' 카드를 숨겨 결과에 집중
+  const addHtml=siteSearchTerm?'':`<div style="background:var(--bg2);border:1.5px dashed var(--border);border-radius:12px;padding:16px;margin-bottom:12px;">
     <div style="font-size:14px;font-weight:500;color:var(--text1);margin-bottom:12px;">+ 새 사업장 추가</div>
     <div style="margin-bottom:10px;"><label class="field-label">사업장 이름</label><input type="text" id="new-site-name" placeholder="사업장 이름 입력" /></div>
     <div style="margin-bottom:10px;"><label class="field-label">담당 매니저</label>
@@ -944,8 +1041,32 @@ function renderSiteSettings(){
     </div>
     <button onclick="addNewSite()" style="width:100%;padding:12px;font-size:14px;font-weight:500;background:var(--text1);color:var(--bg2);border:none;border-radius:10px;cursor:pointer;font-family:inherit;">추가</button>
   </div>`;
-  list.innerHTML=addHtml+sitesHtml;
+
+  const emptyHtml=shown.length?'':`<div class="empty-state">"${siteSearchTerm}" 검색 결과가 없어요</div>`;
+  list.innerHTML=addHtml+sitesHtml+emptyHtml;
+
+  // 검색 결과가 1곳이면 바로 펼쳐줌
+  if(siteSearchTerm&&shown.length===1){
+    const c=document.getElementById('scard-'+esc(shown[0]));
+    if(c)c.classList.add('open');
+  }
 }
+
+window.toggleWeekdayMode=function(site){
+  const sw=document.getElementById('wdsw-'+esc(site));
+  const box=document.getElementById('wdbox-'+esc(site));
+  const on=sw.classList.toggle('on');
+  box.style.display=on?'block':'none';
+  if(on){
+    // 켤 때 평일 설정을 각 요일의 출발점으로 복사
+    const base=(SITE_MEALS[site]&&SITE_MEALS[site]['평일'])||[];
+    WEEKDAYS.forEach(day=>{
+      document.querySelectorAll(`#chips-${esc(site)}-${esc(day)} .meal-chip`).forEach(c=>{
+        c.classList.toggle('on',base.includes(c.textContent));
+      });
+    });
+  }
+};
 
 window.toggleSiteCard=function(site){document.getElementById('scard-'+esc(site)).classList.toggle('open');};
 window.toggleMealChip=function(el){el.classList.toggle('on');};
@@ -961,6 +1082,14 @@ window.saveSiteSettings=async function(site){
     const mgr=MANAGERS.find(m=>m.name===finalMgr);if(mgr&&!mgr.sites.includes(site))mgr.sites.push(site);
     const newMeals={};
     ALL_DAYS.forEach(day=>{const chips=document.querySelectorAll(`#chips-${esc(site)}-${esc(day)} .meal-chip`);newMeals[day]=Array.from(chips).filter(c=>c.classList.contains('on')).map(c=>c.textContent);});
+    // 요일별 상세 설정이 켜져 있을 때만 개별 요일을 저장 (끄면 평일 설정만 남음)
+    const wdOn=document.getElementById('wdsw-'+esc(site))?.classList.contains('on');
+    if(wdOn){
+      WEEKDAYS.forEach(day=>{
+        const chips=document.querySelectorAll(`#chips-${esc(site)}-${esc(day)} .meal-chip`);
+        newMeals[day]=Array.from(chips).filter(c=>c.classList.contains('on')).map(c=>c.textContent);
+      });
+    }
     SITE_MEALS[site]=newMeals;
     await saveConfig();hideLoading();showToast(`${site} 설정 저장 완료!`);refreshDropdowns();renderSiteSettings();
   }catch(e){hideLoading();showToast('저장 실패: '+e.message,true);}
